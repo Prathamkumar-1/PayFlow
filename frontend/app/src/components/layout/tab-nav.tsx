@@ -8,6 +8,7 @@ import { useUIStore, type TabId } from '@/stores/use-ui-store'
 import { useDashboardStore } from '@/stores/use-dashboard-store'
 import { useIntelTuningStatus } from '@/hooks/use-api'
 import { cn } from '@/lib/utils'
+import { useT, type TranslationKey } from '@/lib/i18n'
 import {
   LayoutDashboard,
   Crosshair,
@@ -20,15 +21,21 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
-const TABS: { id: TabId; label: string; shortLabel: string; icon: LucideIcon; key: string }[] = [
-  { id: 'pre-fraud-intel', label: 'Pre-Fraud Intel', shortLabel: 'Pre-Fraud', icon: Radar, key: '1' },
-  { id: 'overview', label: 'Fund-Flow Overview', shortLabel: 'Overview', icon: LayoutDashboard, key: '2' },
-  { id: 'threat-sim', label: 'Adaptive Event Lab', shortLabel: 'Event Lab', icon: Crosshair, key: '3' },
-  { id: 'investigations', label: 'Investigations', shortLabel: 'Investigate', icon: Scale, key: '4' },
-  { id: 'intelligence', label: 'Intelligence & Integrity', shortLabel: 'Intel', icon: BrainCircuit, key: '5' },
-  { id: 'analytics', label: 'Analytics', shortLabel: 'Analytics', icon: BarChart3, key: '6' },
-  { id: 'compliance', label: 'Compliance & Regulatory', shortLabel: 'Comply', icon: ShieldCheck, key: '7' },
-  { id: 'system', label: 'System', shortLabel: 'System', icon: Cpu, key: '8' },
+const TABS: {
+  id: TabId
+  labelKey: TranslationKey
+  shortKey: TranslationKey
+  icon: LucideIcon
+  key: string
+}[] = [
+  { id: 'pre-fraud-intel', labelKey: 'tab_pre_fraud_label', shortKey: 'tab_pre_fraud_short', icon: Radar, key: '1' },
+  { id: 'overview', labelKey: 'tab_overview_label', shortKey: 'tab_overview_short', icon: LayoutDashboard, key: '2' },
+  { id: 'threat-sim', labelKey: 'tab_threat_label', shortKey: 'tab_threat_short', icon: Crosshair, key: '3' },
+  { id: 'investigations', labelKey: 'tab_investigations_label', shortKey: 'tab_investigations_short', icon: Scale, key: '4' },
+  { id: 'intelligence', labelKey: 'tab_intelligence_label', shortKey: 'tab_intelligence_short', icon: BrainCircuit, key: '5' },
+  { id: 'analytics', labelKey: 'tab_analytics_label', shortKey: 'tab_analytics_short', icon: BarChart3, key: '6' },
+  { id: 'compliance', labelKey: 'tab_compliance_label', shortKey: 'tab_compliance_short', icon: ShieldCheck, key: '7' },
+  { id: 'system', labelKey: 'tab_system_label', shortKey: 'tab_system_short', icon: Cpu, key: '8' },
 ]
 
 export function TabNav() {
@@ -38,12 +45,13 @@ export function TabNav() {
   const pendingAlerts = useDashboardStore((s) => s.pendingAlerts)
   const agentLogLen = useDashboardStore((s) => s.agentLog.length)
   const { data: intelStatus } = useIntelTuningStatus()
+  const t = useT()
 
-  // Keyboard shortcut: Alt+1..5
+  // Keyboard shortcut: Alt+1..8
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
-        const tab = TABS.find((t) => t.key === e.key)
+        const tab = TABS.find((tb) => tb.key === e.key)
         if (tab) {
           e.preventDefault()
           setActiveTab(tab.id)
@@ -70,13 +78,15 @@ export function TabNav() {
         const Icon = tab.icon
         const isActive = activeTab === tab.id
         const badge = badgeCounts[tab.id]
+        const label = t(tab.labelKey)
+        const shortLabel = t(tab.shortKey)
         return (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            aria-label={tab.label}
+            aria-label={label}
             aria-current={isActive ? 'page' : undefined}
-            title={`${tab.label} (Alt+${tab.key})`}
+            title={`${label} (Alt+${tab.key})`}
             className={cn(
               'group relative flex shrink-0 items-center gap-2 px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-all duration-150',
               'relative rounded-full border',
@@ -89,8 +99,8 @@ export function TabNav() {
               'w-3.5 h-3.5 transition-colors',
               isActive ? 'text-white' : 'text-text-muted group-hover:text-accent-primary',
             )} />
-            <span className="hidden 2xl:inline">{tab.label}</span>
-            <span className="2xl:hidden">{tab.shortLabel}</span>
+            <span className="hidden 2xl:inline">{label}</span>
+            <span className="2xl:hidden">{shortLabel}</span>
             {/* Keyboard hint */}
             <span className={cn(
               'text-[7px] font-mono px-1 py-0.5 rounded border leading-none ml-0.5 transition-colors',

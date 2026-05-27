@@ -4,6 +4,7 @@
 
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { LanguageProvider, useT } from '@/lib/i18n'
 import { RootLayout } from '@/components/layout/root-layout'
 import { useSSE } from '@/hooks/use-sse'
 import { useDashboardHydration } from '@/hooks/use-dashboard-hydration'
@@ -116,15 +117,16 @@ function AppContent() {
 }
 
 function TabLoadingFallback() {
+  const t = useT()
   return (
     <div className="flex h-full items-center justify-center bg-bg-deep px-6">
       <div className="w-full max-w-3xl rounded-lg border border-border-subtle bg-bg-surface p-6 shadow-sm">
         <div className="mb-4 h-2 w-32 rounded-full bg-alert-critical" />
         <div className="text-sm font-bold uppercase tracking-[0.14em] text-text-primary">
-          Loading Union Bank intelligence surface
+          {t('loading_surface')}
         </div>
         <div className="mt-2 text-[11px] text-text-muted">
-          Preparing the next tab from the local production bundle. Live data continues to hydrate in the background.
+          {t('loading_desc')}
         </div>
         <div className="mt-5 grid grid-cols-3 gap-3">
           <div className="h-16 rounded-md border border-border-subtle bg-bg-elevated animate-pulse" />
@@ -139,7 +141,9 @@ function TabLoadingFallback() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContent />
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </QueryClientProvider>
   )
 }

@@ -14,16 +14,19 @@ import { SimulationEventTrace } from '@/components/simulation/simulation-event-t
 import { PipelineMotionVisualizer } from '@/components/simulation/pipeline-motion-visualizer'
 import { PipelineTransparency } from '@/components/simulation/pipeline-transparency'
 import { useActivityStore } from '@/stores/use-activity-store'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import type { LucideIcon } from 'lucide-react'
 
-const STEPS = [
-  { num: 1, label: 'PRIME FROM INTEL', icon: Radar },
-  { num: 2, label: 'INJECT EVENT CHAIN', icon: Search },
-  { num: 3, label: 'APPROVE COUNTER', icon: ClipboardCheck },
-] as const
+const STEPS: { num: number; labelKey: TranslationKey; icon: LucideIcon }[] = [
+  { num: 1, labelKey: 'prime_from_intel', icon: Radar },
+  { num: 2, labelKey: 'inject_event', icon: Search },
+  { num: 3, labelKey: 'approve_counter', icon: ClipboardCheck },
+]
 
 export function ThreatSimPage() {
   const trackedEventId = useActivityStore((s) => s.trackedEventId)
   const [showLegacyTools, setShowLegacyTools] = useState(false)
+  const t = useT()
 
   return (
     <div className="h-full overflow-y-auto p-4 space-y-4">
@@ -31,17 +34,16 @@ export function ThreatSimPage() {
       <section className="animate-fade-in rounded-md border border-border-default bg-bg-elevated/95 p-5 backdrop-blur-sm shadow-[inset_0_1px_0_0_rgba(255,255,255,0.03)]">
         <div className="flex items-center gap-2 text-[10px] text-accent-primary uppercase tracking-[0.12em] font-semibold">
           <Radar className="w-3.5 h-3.5" />
-          Adaptive Event Lab
+          {t('adaptive_event_lab')}
         </div>
 
         <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-text-primary leading-tight">
-              Turn pre-fraud intelligence into live, analyst-gated response drills
+              {t('threat_sim_tagline')}
             </h2>
             <p className="mt-1.5 max-w-3xl text-[12px] leading-relaxed text-text-secondary">
-              Generate realistic Indian banking event chains from active OSINT/SOCMINT playbooks, watch each backend
-              process stage, and approve countermeasures only after internal PayFlow evidence is visible.
+              {t('threat_sim_desc')}
             </p>
           </div>
 
@@ -60,7 +62,7 @@ export function ThreatSimPage() {
                     <div className="mt-1.5 flex items-center gap-1">
                       <Icon className="w-3 h-3 text-text-muted" />
                       <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-text-muted">
-                        {step.label}
+                        {t(step.labelKey)}
                       </span>
                     </div>
                   </div>
@@ -86,10 +88,10 @@ export function ThreatSimPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-text-primary">
-              Secondary simulation tools
+              {t('secondary_tools')}
             </div>
             <p className="mt-1 text-[10px] text-text-secondary">
-              Kept available for engineering checks, but collapsed so the judge path stays focused on intel-driven countermeasures.
+              {t('secondary_tools_desc')}
             </p>
           </div>
           <button
@@ -97,7 +99,7 @@ export function ThreatSimPage() {
             onClick={() => setShowLegacyTools((value) => !value)}
             className="rounded-md border border-accent-primary/30 bg-bg-surface px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-accent-primary hover:bg-accent-muted"
           >
-            {showLegacyTools ? 'Hide tools' : 'Show tools'}
+            {showLegacyTools ? t('hide_tools') : t('show_tools')}
           </button>
         </div>
 

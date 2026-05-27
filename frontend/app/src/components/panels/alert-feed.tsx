@@ -10,6 +10,7 @@ import { fmtPaisa, fmtTimestamp, truncId, cn } from '@/lib/utils'
 import { Bell, Inbox, Filter, Tag } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import type { SSEAgentVerdict, AgentLogEntry } from '@/lib/types'
+import { useT } from '@/lib/i18n'
 
 const TYPOLOGY_COLORS: Record<string, string> = {
   layering: 'bg-red-500/20 text-red-400 border-red-500/30',
@@ -32,6 +33,7 @@ export function AlertFeed() {
   const recentEvents = useSimulationStore((s) => s.recentEvents)
   const { data: typologyData } = useFraudTypology()
   const [filterTypology, setFilterTypology] = useState<string | null>(null)
+  const t = useT()
 
   const allVerdicts = useMemo(() =>
     agentLog.filter((e) => e.type === 'verdict').reverse().slice(0, 30),
@@ -71,11 +73,11 @@ export function AlertFeed() {
         <div className="flex items-center gap-1.5">
           <Bell className="w-3.5 h-3.5 text-accent-primary" />
           <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
-            {hasVerdicts ? 'Trigger Feed' : 'Injected Triggers'}
+            {hasVerdicts ? t('trigger_feed') : t('injected_triggers')}
           </span>
         </div>
         <span className="text-[10px] font-mono tabular-nums text-text-muted">
-          {hasVerdicts ? `${verdicts.length} verdicts` : `${traceFallback.length} events`}
+          {hasVerdicts ? `${verdicts.length} ${t('verdicts')}` : `${traceFallback.length} ${t('events')}`}
         </span>
       </div>
 
@@ -90,7 +92,7 @@ export function AlertFeed() {
             )}
             onClick={() => setFilterTypology(null)}
           >
-            All
+            {t('all')}
           </button>
           {activeTypologies.map(([typ, count]) => (
             <button
@@ -137,10 +139,10 @@ export function AlertFeed() {
           <div className="flex flex-col items-center justify-center h-full gap-2.5 animate-fade-in">
             <Inbox className="w-6 h-6 text-text-muted/50" />
             <p className="text-text-muted text-[10px] uppercase tracking-[0.12em]">
-              No triggers yet
+              {t('no_triggers')}
             </p>
             <p className="text-text-muted/60 text-[9px] px-6 text-center leading-relaxed">
-              Launch a simulation to see live events stream in
+              {t('launch_sim_msg')}
             </p>
           </div>
         ) : hasVerdicts ? (

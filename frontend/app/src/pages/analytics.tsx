@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { WorldThreatMap, IndiaRegionalMap, CountryThreatPanel, CrossBorderCorridors, AttackVectorBreakdown, LiveThreatFeed } from '@/components/threat-maps'
+import { useT } from '@/lib/i18n'
 
 // ============================================================================
 // Constants
@@ -165,6 +166,7 @@ const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 function RiskHeatmap({ data }: { data: { hour: number; day: string; value: number }[] }) {
   const maxVal = useMemo(() => Math.max(...data.map(d => d.value), 1), [data])
+  const t = useT()
 
   const getColor = useCallback((value: number) => {
     const t = value / maxVal
@@ -205,13 +207,13 @@ function RiskHeatmap({ data }: { data: { hour: number; day: string; value: numbe
       ))}
       {/* Legend */}
       <div className="flex items-center justify-end gap-1 mt-2 mr-2">
-        <span className="text-[7px] text-slate-600">Low</span>
+        <span className="text-[7px] text-slate-600">{t('low')}</span>
         <div className="flex gap-px">
           {['rgba(34,197,94,0.3)', 'rgba(234,179,8,0.4)', 'rgba(249,115,22,0.5)', 'rgba(239,68,68,0.7)'].map((c, i) => (
             <div key={i} className="w-3 h-2 rounded-[1px]" style={{ backgroundColor: c }} />
           ))}
         </div>
-        <span className="text-[7px] text-slate-600">High</span>
+        <span className="text-[7px] text-slate-600">{t('high')}</span>
       </div>
     </div>
   )
@@ -315,6 +317,7 @@ function TreemapContent(props: any) {
 export function AnalyticsPage() {
   const store = useAnalyticsStore()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const t = useT()
 
   // Start live data streaming
   useEffect(() => {
@@ -368,42 +371,42 @@ export function AnalyticsPage() {
           <div>
             <h1 className="text-lg font-bold text-white flex items-center gap-2">
               <BarChart3 size={20} className="text-indigo-400" />
-              Real-Time Fraud Analytics
+              {t('realtime_fraud_analytics')}
               <span className="ml-2 flex items-center gap-1 text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <Radio size={8} className="animate-pulse" /> STREAMING
+                <Radio size={8} className="animate-pulse" /> {t('streaming')}
               </span>
             </h1>
             <p className="text-[10px] text-slate-500 mt-0.5">
-              PayFlow Fraud Intelligence Platform &mdash; Union Bank of India &mdash; Live Telemetry Dashboard
+              {t('analytics_subtitle')}
             </p>
           </div>
           <div className="text-right">
-            <div className="text-[9px] text-slate-600 font-mono">Last update</div>
+            <div className="text-[9px] text-slate-600 font-mono">{t('last_update')}</div>
             <div className="text-xs text-slate-400 font-mono tabular-nums">{new Date().toLocaleTimeString()}</div>
           </div>
         </div>
 
         {/* ====== KPI STAT CARDS (Row 1) ====== */}
         <div className="grid grid-cols-5 gap-3">
-          <StatCard icon={Activity} label="Transactions Processed" value={<AnimatedCounter value={store.totalProcessed} />} color={CHART_COLORS.primary} trend={2.4} trendLabel="vs last hour" />
-          <StatCard icon={ShieldAlert} label="Flagged Suspicious" value={<AnimatedCounter value={store.totalFlagged} />} color={CHART_COLORS.warning} trend={-1.8} trendLabel="Alert rate declining" />
-          <StatCard icon={Shield} label="Blocked / Frozen" value={<AnimatedCounter value={store.totalBlocked} />} color={CHART_COLORS.danger} pulse trend={5.2} trendLabel="Auto-enforced" />
-          <StatCard icon={Timer} label="Avg Response" value={<AnimatedCounter value={store.avgResponseMs} decimals={1} />} unit="ms" color={CHART_COLORS.secondary} trend={-3.1} trendLabel="Sub-50ms target" />
-          <StatCard icon={Zap} label="Throughput" value={<AnimatedCounter value={store.throughputTps} />} unit="tx/s" color={CHART_COLORS.teal} trend={1.6} trendLabel="Elastic scaling" />
+          <StatCard icon={Activity} label={t('transactions_processed')} value={<AnimatedCounter value={store.totalProcessed} />} color={CHART_COLORS.primary} trend={2.4} trendLabel={t('vs_last_hour')} />
+          <StatCard icon={ShieldAlert} label={t('flagged_suspicious')} value={<AnimatedCounter value={store.totalFlagged} />} color={CHART_COLORS.warning} trend={-1.8} />
+          <StatCard icon={Shield} label={t('blocked_frozen')} value={<AnimatedCounter value={store.totalBlocked} />} color={CHART_COLORS.danger} pulse trend={5.2} />
+          <StatCard icon={Timer} label={t('avg_response')} value={<AnimatedCounter value={store.avgResponseMs} decimals={1} />} unit="ms" color={CHART_COLORS.secondary} trend={-3.1} />
+          <StatCard icon={Zap} label={t('throughput')} value={<AnimatedCounter value={store.throughputTps} />} unit="tx/s" color={CHART_COLORS.teal} trend={1.6} />
         </div>
 
         {/* ====== KPI STAT CARDS (Row 2) ====== */}
         <div className="grid grid-cols-5 gap-3">
-          <StatCard icon={Brain} label="Model Accuracy" value={<AnimatedCounter value={store.modelAccuracy} decimals={1} />} unit="%" color={CHART_COLORS.success} trend={0.3} trendLabel="Ensemble weighted" />
-          <StatCard icon={Target} label="True Positive Rate" value={<AnimatedCounter value={store.truePositiveRate} decimals={1} />} unit="%" color={CHART_COLORS.blue} trend={1.2} trendLabel="Recall improving" />
-          <StatCard icon={AlertTriangle} label="False Positive Rate" value={<AnimatedCounter value={store.falsePositiveRate} decimals={2} />} unit="%" color={CHART_COLORS.orange} trend={-2.5} trendLabel="Reducing noise" />
-          <StatCard icon={Network} label="Active Mule Networks" value={<AnimatedCounter value={store.activeMules} />} color={CHART_COLORS.rose} pulse trend={8.3} trendLabel="Graph detection" />
-          <StatCard icon={Gauge} label="System Risk Score" value={<AnimatedCounter value={store.riskScore} decimals={1} />} unit="/100" color={store.riskScore > 60 ? CHART_COLORS.danger : store.riskScore > 40 ? CHART_COLORS.warning : CHART_COLORS.success} trend={-0.7} trendLabel="Composite index" />
+          <StatCard icon={Brain} label={t('model_accuracy')} value={<AnimatedCounter value={store.modelAccuracy} decimals={1} />} unit="%" color={CHART_COLORS.success} trend={0.3} />
+          <StatCard icon={Target} label={t('true_positive_rate')} value={<AnimatedCounter value={store.truePositiveRate} decimals={1} />} unit="%" color={CHART_COLORS.blue} trend={1.2} />
+          <StatCard icon={AlertTriangle} label={t('false_positive_rate')} value={<AnimatedCounter value={store.falsePositiveRate} decimals={2} />} unit="%" color={CHART_COLORS.orange} trend={-2.5} />
+          <StatCard icon={Network} label={t('active_mule_networks')} value={<AnimatedCounter value={store.activeMules} />} color={CHART_COLORS.rose} pulse trend={8.3} />
+          <StatCard icon={Gauge} label={t('system_risk_score')} value={<AnimatedCounter value={store.riskScore} decimals={1} />} unit="/100" color={store.riskScore > 60 ? CHART_COLORS.danger : store.riskScore > 40 ? CHART_COLORS.warning : CHART_COLORS.success} trend={-0.7} />
         </div>
 
         {/* ====== ROW 1: Transaction Volume + Fraud Rate ====== */}
         <div className="grid grid-cols-2 gap-3">
-          <ChartCard title="Transaction Volume Stream" subtitle="Real-time ingestion" icon={Activity} badge="AREA">
+          <ChartCard title={t('transaction_volume_stream')} subtitle={t('realtime_ingestion')} icon={Activity} badge="AREA">
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={store.transactionVolume}>
                 <defs>
@@ -432,7 +435,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Fraud Detection Rate" subtitle="% fraudulent vs threshold" icon={TrendingUp} badge="LINE">
+          <ChartCard title={t('fraud_detection_rate')} subtitle={t('pct_fraudulent')} icon={TrendingUp} badge="LINE">
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={store.fraudRate}>
                 <CartesianGrid {...GRID_STYLE} />
@@ -450,7 +453,7 @@ export function AnalyticsPage() {
 
         {/* ====== ROW 2: Channel Breakdown + Pipeline Latency ====== */}
         <div className="grid grid-cols-2 gap-3">
-          <ChartCard title="Channel-wise Volume" subtitle="Stacked distribution" icon={Layers} badge="STACKED">
+          <ChartCard title={t('channel_wise_volume')} subtitle={t('stacked_distribution')} icon={Layers} badge="STACKED">
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={store.channelVolume}>
                 <defs>
@@ -472,7 +475,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Pipeline Latency Distribution" subtitle="p50 / p95 / p99 + ML Inference" icon={Timer} badge="COMPOSED">
+          <ChartCard title={t('pipeline_latency')} subtitle={t('p_latency_desc')} icon={Timer} badge="COMPOSED">
             <ResponsiveContainer width="100%" height={220}>
               <ComposedChart data={store.latencyMetrics}>
                 <defs>
@@ -496,11 +499,11 @@ export function AnalyticsPage() {
 
         {/* ====== ROW 3: Risk Heatmap + Fraud Typology Treemap ====== */}
         <div className="grid grid-cols-2 gap-3">
-          <ChartCard title="Temporal Risk Heatmap" subtitle="24h × 7d fraud risk intensity" icon={Target} badge="HEATMAP" className="min-h-[260px]">
+          <ChartCard title={t('temporal_risk_heatmap')} subtitle={t('heatmap_desc')} icon={Target} badge="HEATMAP" className="min-h-[260px]">
             <RiskHeatmap data={store.riskHeatmap} />
           </ChartCard>
 
-          <ChartCard title="Fraud Typology Distribution" subtitle="Relative attack vector sizes" icon={ShieldAlert} badge="TREEMAP">
+          <ChartCard title={t('fraud_typology_dist')} subtitle={t('relative_attack')} icon={ShieldAlert} badge="TREEMAP">
             <ResponsiveContainer width="100%" height={220}>
               <Treemap
                 data={treemapData}
@@ -518,14 +521,14 @@ export function AnalyticsPage() {
           {/* Section header */}
           <div className="flex items-center gap-2 pt-2">
             <Globe size={16} className="text-indigo-400" />
-            <h2 className="text-sm font-bold text-white">Geographic Threat Intelligence</h2>
+            <h2 className="text-sm font-bold text-white">{t('geographic_threat')}</h2>
             <span className="text-[8px] font-mono px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center gap-1">
-              <Radio size={7} className="animate-pulse" /> LIVE THREAT FEED
+              <Radio size={7} className="animate-pulse" /> {t('live_threat_feed_title')}
             </span>
           </div>
 
           {/* World Map — full width */}
-          <ChartCard title="Global Threat Landscape" subtitle="Cross-border fraud flow & hotspot intensity" icon={Globe} badge="GEO MAP" className="overflow-hidden">
+          <ChartCard title={t('global_threat')} subtitle={t('cross_border_fraud')} icon={Globe} badge="GEO MAP" className="overflow-hidden">
             <WorldThreatMap
               hotspots={store.threatHotspots}
               flows={store.crossBorderFlows}
@@ -535,26 +538,26 @@ export function AnalyticsPage() {
 
           {/* India Map + Country Intelligence + Attack Vectors */}
           <div className="grid grid-cols-3 gap-3">
-            <ChartCard title="India Regional Threat Map" subtitle="State-wise risk heatmap on real geography" icon={MapPin} badge="INDIA MAP" className="col-span-1 overflow-hidden">
+            <ChartCard title={t('india_regional')} subtitle={t('india_state_risk')} icon={MapPin} badge="INDIA MAP" className="col-span-1 overflow-hidden">
               <IndiaRegionalMap regions={store.geoRegions} />
             </ChartCard>
 
-            <ChartCard title="Country Threat Intelligence" subtitle="Top 10 threat-origin nations" icon={ShieldAlert} badge="THREAT INDEX">
+            <ChartCard title={t('country_threat')} subtitle={t('top_10_threat')} icon={ShieldAlert} badge="THREAT INDEX">
               <CountryThreatPanel countries={store.countryThreats} />
             </ChartCard>
 
-            <ChartCard title="Attack Vector Breakdown" subtitle="Distribution by fraud technique" icon={Target} badge="VECTORS">
+            <ChartCard title={t('attack_vector')} subtitle={t('attack_technique')} icon={Target} badge="VECTORS">
               <AttackVectorBreakdown vectors={store.attackVectors} />
             </ChartCard>
           </div>
 
           {/* Live Feed + Cross-Border Corridors */}
           <div className="grid grid-cols-2 gap-3">
-            <ChartCard title="Live Threat Feed" subtitle="Real-time event stream" icon={Radio} badge="LIVE" className="overflow-hidden">
+            <ChartCard title={t('live_threat_feed')} subtitle={t('realtime_event_stream')} icon={Radio} badge="LIVE" className="overflow-hidden">
               <LiveThreatFeed events={store.threatEvents} />
             </ChartCard>
 
-            <ChartCard title="Cross-Border Corridors" subtitle="International suspicious flow analysis" icon={Network} badge="CORRIDORS">
+            <ChartCard title={t('cross_border')} subtitle={t('intl_suspicious')} icon={Network} badge="CORRIDORS">
               <CrossBorderCorridors flows={store.crossBorderFlows} />
             </ChartCard>
           </div>
@@ -562,7 +565,7 @@ export function AnalyticsPage() {
 
         {/* ====== ROW 4: Alert Pipeline Funnel + Model Comparison Radar ====== */}
         <div className="grid grid-cols-3 gap-3">
-          <ChartCard title="Alert Processing Pipeline" subtitle="Event funnel analysis" icon={Layers} badge="FUNNEL">
+          <ChartCard title={t('alert_pipeline')} subtitle={t('event_funnel')} icon={Layers} badge="FUNNEL">
             <ResponsiveContainer width="100%" height={260}>
               <FunnelChart>
                 <Tooltip {...TOOLTIP_STYLE} />
@@ -584,7 +587,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="ML Model Performance Radar" subtitle="Multi-model comparison" icon={Brain} badge="RADAR">
+          <ChartCard title={t('ml_radar')} subtitle={t('multi_model')} icon={Brain} badge="RADAR">
             <ResponsiveContainer width="100%" height={260}>
               <RadarChart data={store.modelPerformance} cx="50%" cy="50%" outerRadius="70%">
                 <PolarGrid stroke="rgba(148,163,184,0.1)" />
@@ -599,7 +602,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Model F1 Score Radial" subtitle="Head-to-head comparison" icon={Gauge} badge="RADIAL">
+          <ChartCard title={t('model_f1')} subtitle={t('head_to_head')} icon={Gauge} badge="RADIAL">
             <ResponsiveContainer width="100%" height={260}>
               <RadialBarChart innerRadius="25%" outerRadius="90%" data={radialModelData} startAngle={180} endAngle={0}>
                 <RadialBar
@@ -618,7 +621,7 @@ export function AnalyticsPage() {
 
         {/* ====== ROW 5: Velocity Distribution + Amount Distribution + Account Risk Bands ====== */}
         <div className="grid grid-cols-3 gap-3">
-          <ChartCard title="Transaction Velocity Profile" subtitle="Frequency-based risk bands" icon={Zap} badge="GROUPED BAR">
+          <ChartCard title={t('transaction_velocity')} subtitle={t('freq_risk')} icon={Zap} badge="GROUPED BAR">
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={store.velocityDistribution} barGap={2}>
                 <CartesianGrid {...GRID_STYLE} />
@@ -633,7 +636,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Amount Distribution vs Fraud" subtitle="Transaction size risk correlation" icon={TrendingDown} badge="COMPOSED">
+          <ChartCard title={t('amount_distribution')} subtitle={t('txn_size_risk')} icon={TrendingDown} badge="COMPOSED">
             <ResponsiveContainer width="100%" height={240}>
               <ComposedChart data={store.amountDistribution}>
                 <defs>
@@ -654,7 +657,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Account Risk Band Census" subtitle="Risk-stratified population" icon={Shield} badge="PIE">
+          <ChartCard title={t('account_risk_band')} subtitle={t('risk_stratified')} icon={Shield} badge="PIE">
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
@@ -679,7 +682,7 @@ export function AnalyticsPage() {
 
         {/* ====== ROW 6: Geo Risk Scatter + Network Radar + Device Fingerprints ====== */}
         <div className="grid grid-cols-3 gap-3">
-          <ChartCard title="Regional Risk vs Volume" subtitle="Scatter: bubble = fraud rate" icon={Target} badge="SCATTER">
+          <ChartCard title={t('regional_risk')} subtitle={t('scatter_bubble')} icon={Target} badge="SCATTER">
             <ResponsiveContainer width="100%" height={240}>
               <ScatterChart>
                 <CartesianGrid {...GRID_STYLE} />
@@ -695,7 +698,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Network Topology Metrics" subtitle="Graph health indicators" icon={Network} badge="RADAR">
+          <ChartCard title={t('network_topology')} subtitle={t('graph_health')} icon={Network} badge="RADAR">
             <ResponsiveContainer width="100%" height={240}>
               <RadarChart data={store.networkMetrics} cx="50%" cy="50%" outerRadius="68%">
                 <PolarGrid stroke="rgba(148,163,184,0.08)" />
@@ -707,7 +710,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Device Fingerprint Analysis" subtitle="Unique / Flagged / Banned" icon={Fingerprint} badge="HORIZONTAL BAR">
+          <ChartCard title={t('device_fingerprint')} subtitle={t('unique_flagged_banned')} icon={Fingerprint} badge="HORIZONTAL BAR">
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={store.deviceFingerprints} layout="vertical" barGap={1}>
                 <CartesianGrid {...GRID_STYLE} />
@@ -726,17 +729,17 @@ export function AnalyticsPage() {
         {/* ====== ROW 7: Geo Heat Table + Gauges ====== */}
         <div className="grid grid-cols-3 gap-3">
           {/* Geo Table */}
-          <ChartCard title="Regional Fraud Intelligence" subtitle="State-wise breakdown" icon={Target} badge="TABLE" className="col-span-2">
+          <ChartCard title={t('regional_fraud_intel')} subtitle={t('state_breakdown')} icon={Target} badge="TABLE" className="col-span-2">
             <div className="overflow-x-auto">
               <table className="w-full text-[10px]">
                 <thead>
                   <tr className="border-b border-slate-800">
-                    <th className="text-left py-2 px-3 text-slate-500 font-medium">Region</th>
-                    <th className="text-right py-2 px-3 text-slate-500 font-medium">Transactions</th>
-                    <th className="text-right py-2 px-3 text-slate-500 font-medium">Fraud Rate</th>
+                    <th className="text-left py-2 px-3 text-slate-500 font-medium">{t('region')}</th>
+                    <th className="text-right py-2 px-3 text-slate-500 font-medium">{t('transactions')}</th>
+                    <th className="text-right py-2 px-3 text-slate-500 font-medium">{t('fraud_rate')}</th>
                     <th className="text-right py-2 px-3 text-slate-500 font-medium">Volume (₹)</th>
-                    <th className="text-right py-2 px-3 text-slate-500 font-medium">Risk Score</th>
-                    <th className="text-center py-2 px-3 text-slate-500 font-medium">Risk Bar</th>
+                    <th className="text-right py-2 px-3 text-slate-500 font-medium">{t('risk_score')}</th>
+                    <th className="text-center py-2 px-3 text-slate-500 font-medium">{t('risk')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -776,19 +779,19 @@ export function AnalyticsPage() {
           </ChartCard>
 
           {/* Gauges */}
-          <ChartCard title="System Health Gauges" subtitle="Critical metrics" icon={Gauge} badge="GAUGE">
+          <ChartCard title={t('system_health_gauges')} subtitle={t('critical_metrics')} icon={Gauge} badge="GAUGE">
             <div className="grid grid-cols-2 gap-2 pt-2">
-              <GaugeChart value={store.modelAccuracy} max={100} label="Accuracy %" color={CHART_COLORS.success} />
-              <GaugeChart value={store.truePositiveRate} max={100} label="TPR %" color={CHART_COLORS.blue} />
-              <GaugeChart value={store.falsePositiveRate} max={10} label="FPR %" color={CHART_COLORS.danger} />
-              <GaugeChart value={store.avgResponseMs} max={100} label="Latency ms" color={CHART_COLORS.secondary} />
+              <GaugeChart value={store.modelAccuracy} max={100} label={t('accuracy_pct')} color={CHART_COLORS.success} />
+              <GaugeChart value={store.truePositiveRate} max={100} label={t('tpr_pct')} color={CHART_COLORS.blue} />
+              <GaugeChart value={store.falsePositiveRate} max={10} label={t('fpr_pct')} color={CHART_COLORS.danger} />
+              <GaugeChart value={store.avgResponseMs} max={100} label={t('latency_ms')} color={CHART_COLORS.secondary} />
             </div>
           </ChartCard>
         </div>
 
         {/* ====== ROW 8: Fraud Typology Bar + Live Trend Comparison ====== */}
         <div className="grid grid-cols-2 gap-3">
-          <ChartCard title="Fraud Pattern Trend Analysis" subtitle="Attack vector comparison" icon={TrendingUp} badge="HORIZONTAL BAR">
+          <ChartCard title={t('fraud_pattern_trend')} subtitle={t('attack_comparison')} icon={TrendingUp} badge="HORIZONTAL BAR">
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={store.fraudTypologies} layout="vertical" barGap={2}>
                 <CartesianGrid {...GRID_STYLE} />
@@ -804,7 +807,7 @@ export function AnalyticsPage() {
             </ResponsiveContainer>
           </ChartCard>
 
-          <ChartCard title="Fraud Typology Donut" subtitle="Proportional breakdown" icon={ShieldAlert} badge="DONUT">
+          <ChartCard title={t('fraud_typology_donut')} subtitle={t('proportional_breakdown')} icon={ShieldAlert} badge="DONUT">
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie

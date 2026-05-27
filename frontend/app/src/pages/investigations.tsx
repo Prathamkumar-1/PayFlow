@@ -25,6 +25,7 @@ import {
 } from '@/hooks/use-api'
 import { cn } from '@/lib/utils'
 import { useUIStore } from '@/stores/use-ui-store'
+import { useT } from '@/lib/i18n'
 import type {
   CaseTraceResponse,
   EvidencePackageResponse,
@@ -106,16 +107,17 @@ function StatusBadge({ status }: { status: string }) {
 function ReadinessPanel() {
   const { data } = usePS3Readiness()
   const requirements = data?.requirements ?? []
+  const t = useT()
 
   return (
     <section className="rounded-lg border border-border-subtle bg-bg-deep p-3">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
           <ShieldCheck className="h-4 w-4 text-emerald-300" />
-          Union Bank PS3 Readiness
+          {t('union_ps3_readiness')}
         </div>
         <span className="rounded-md border border-emerald-400/25 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-300">
-          {requirements.filter((r) => r.status === 'ready').length}/5 ready
+          {requirements.filter((r) => r.status === 'ready').length}/5 {t('ready')}
         </span>
       </div>
       <div className="space-y-2">
@@ -146,13 +148,14 @@ function ScenarioGallery({
 }) {
   const { data } = usePS3Scenarios()
   const scenarios = data?.scenarios?.length ? data.scenarios : FALLBACK_SCENARIOS
+  const t = useT()
 
   return (
     <section className="rounded-lg border border-border-subtle bg-bg-deep p-3">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
           <GitBranch className="h-4 w-4 text-accent-primary" />
-          PS3 Scenario Gallery
+          {t('ps3_scenario_gallery')}
         </div>
         <button
           onClick={onLaunch}
@@ -164,7 +167,7 @@ function ScenarioGallery({
           )}
         >
           <Play className="h-3.5 w-3.5" />
-          {launching ? 'Launching' : 'Run Judge Demo'}
+          {launching ? t('launching') : t('run_judge_demo')}
         </button>
       </div>
       <div className="grid grid-cols-1 gap-2">
@@ -202,6 +205,7 @@ function ScenarioGallery({
 
 function CaseTracePanel({ trace }: { trace: CaseTraceResponse | undefined }) {
   const timeline = trace?.timeline ?? []
+  const t = useT()
 
   return (
     <section className="flex min-h-0 flex-1 flex-col rounded-lg border border-border-subtle bg-bg-deep">
@@ -210,19 +214,19 @@ function CaseTracePanel({ trace }: { trace: CaseTraceResponse | undefined }) {
           <div>
             <div className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
               <Scale className="h-4 w-4 text-accent-primary" />
-              Case Workbench
+              {t('case_workbench')}
             </div>
             <h2 className="text-sm font-semibold text-text-primary">
-              {trace?.scenario_label ?? 'Awaiting PS3 case replay'}
+              {trace?.scenario_label ?? t('awaiting_ps3')}
             </h2>
           </div>
           {trace && <StatusBadge status={trace.status} />}
         </div>
         <div className="grid grid-cols-4 gap-2">
-          <Metric label="Case" value={trace?.case_id ?? 'n/a'} />
-          <Metric label="Focus Txn" value={shortId(trace?.focus_txn_id ?? '')} />
-          <Metric label="Graph Evidence" value={trace ? pct(trace.risk_scores.graph_evidence_score) : '0%'} />
-          <Metric label="Value" value={trace?.risk_scores.total_amount_display ?? 'INR 0.00'} />
+          <Metric label={t('case_word')} value={trace?.case_id ?? 'n/a'} />
+          <Metric label={t('focus_txn')} value={shortId(trace?.focus_txn_id ?? '')} />
+          <Metric label={t('graph_evidence')} value={trace ? pct(trace.risk_scores.graph_evidence_score) : '0%'} />
+          <Metric label={t('value')} value={trace?.risk_scores.total_amount_display ?? 'INR 0.00'} />
         </div>
         <PreFraudIntelBrief
           variant="case"
@@ -235,7 +239,7 @@ function CaseTracePanel({ trace }: { trace: CaseTraceResponse | undefined }) {
         <div className="min-h-0 overflow-auto p-4">
           <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
             <TimerReset className="h-4 w-4 text-amber-300" />
-            Transaction Timeline
+            {t('transaction_timeline')}
           </div>
           <div className="space-y-2">
             {timeline.map((entry) => (
@@ -262,7 +266,7 @@ function CaseTracePanel({ trace }: { trace: CaseTraceResponse | undefined }) {
             ))}
             {timeline.length === 0 && (
               <div className="flex h-60 items-center justify-center rounded-md border border-dashed border-border-subtle text-[10px] uppercase tracking-[0.12em] text-text-muted">
-                Launch a PS3 scenario
+                {t('launch_ps3_scenario')}
               </div>
             )}
           </div>
@@ -271,7 +275,7 @@ function CaseTracePanel({ trace }: { trace: CaseTraceResponse | undefined }) {
         <div className="min-h-0 overflow-auto border-t border-border-subtle p-4 2xl:border-l 2xl:border-t-0">
           <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
             <GitBranch className="h-4 w-4 text-emerald-300" />
-            Fund Path
+            {t('fund_path')}
           </div>
           <div className="space-y-2">
             {(trace?.account_roles ?? []).map((role) => (
@@ -295,7 +299,7 @@ function CaseTracePanel({ trace }: { trace: CaseTraceResponse | undefined }) {
           <div className="mt-5">
             <div className="mb-2 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
               <ShieldCheck className="h-4 w-4 text-alert-high" />
-              Suspicious Indicators
+              {t('suspicious_indicators')}
             </div>
             <div className="space-y-2">
               {(trace?.expected_indicators ?? []).map((indicator) => (
@@ -322,12 +326,13 @@ function EvidencePanel({
   onGenerate: () => void
   generating: boolean
 }) {
+  const t = useT()
   return (
     <section className="rounded-lg border border-border-subtle bg-bg-deep p-3">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
           <FileText className="h-4 w-4 text-amber-300" />
-          Evidence Package v2
+          {t('evidence_package')}
         </div>
         <button
           onClick={onGenerate}
@@ -339,7 +344,7 @@ function EvidencePanel({
           )}
         >
           <FileText className="h-3.5 w-3.5" />
-          {generating ? 'Generating' : 'Generate'}
+          {generating ? t('generating') : t('generate')}
         </button>
       </div>
 
@@ -362,12 +367,12 @@ function EvidencePanel({
             className="inline-flex w-full items-center justify-center gap-1.5 rounded-md border border-border-default px-3 py-2 text-[9px] font-bold uppercase tracking-[0.12em] text-text-secondary transition-colors hover:border-accent-primary hover:text-accent-primary"
           >
             <Printer className="h-3.5 w-3.5" />
-            Open Printable Package
+            {t('open_printable')}
           </button>
         </div>
       ) : (
         <div className="rounded-md border border-dashed border-border-subtle p-4 text-[10px] leading-relaxed text-text-muted">
-          FIU-ready JSON and printable HTML will appear after case generation.
+          {t('fiu_ready_msg')}
         </div>
       )}
     </section>
@@ -377,20 +382,21 @@ function EvidencePanel({
 function ScalePanel() {
   const { data } = usePS3Readiness()
   const metrics = data?.scale_metrics
+  const t = useT()
 
   return (
     <section className="rounded-lg border border-border-subtle bg-bg-deep p-3">
       <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-text-secondary">
         <Activity className="h-4 w-4 text-accent-primary" />
-        Scale Proof
+        {t('scale_proof')}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Metric label="Events" value={String(metrics?.events_ingested ?? 0)} />
-        <Metric label="EPS" value={String(metrics?.events_per_sec ?? 0)} />
-        <Metric label="Graph Nodes" value={String(metrics?.graph_nodes ?? 0)} />
-        <Metric label="Graph Edges" value={String(metrics?.graph_edges ?? 0)} />
-        <Metric label="Free VRAM" value={`${metrics?.gpu_vram_free_mb ?? 0} MB`} />
-        <Metric label="LLM Tokens" value={String(metrics?.llm_tokens_total ?? 0)} />
+        <Metric label={t('events')} value={String(metrics?.events_ingested ?? 0)} />
+        <Metric label={t('eps')} value={String(metrics?.events_per_sec ?? 0)} />
+        <Metric label={t('graph_nodes')} value={String(metrics?.graph_nodes ?? 0)} />
+        <Metric label={t('graph_edges')} value={String(metrics?.graph_edges ?? 0)} />
+        <Metric label={t('free_vram')} value={`${metrics?.gpu_vram_free_mb ?? 0} MB`} />
+        <Metric label={t('llm_tokens')} value={String(metrics?.llm_tokens_total ?? 0)} />
       </div>
       <div className="mt-3 space-y-2">
         {(data?.pilot_architecture ?? []).slice(0, 4).map((item) => (
@@ -423,6 +429,7 @@ export function InvestigationsPage() {
   const launchPS3 = useLaunchPS3Scenario()
   const evidence = useCreateEvidencePackage()
   const { data: trace } = useCaseTrace(caseId)
+  const t = useT()
 
   const typologyLine = trace?.ps3_typologies?.length
     ? trace.ps3_typologies.join(' / ')
@@ -461,17 +468,17 @@ export function InvestigationsPage() {
             </div>
             <div className="min-w-0">
               <h1 className="truncate text-base font-bold tracking-wide text-text-primary">
-                Union Bank PS3 Fund-Flow Case Workbench
+                {t('inv_page_title')}
               </h1>
               <p className="mt-0.5 truncate text-[10px] text-text-muted">
-                Trace suspicious movement, prove typology, generate FIU-ready package | {typologyLine} | Qwen 3.5 4B grounded copilot
+                {t('inv_page_subtitle')} | {typologyLine} | {t('qwen_copilot')}
               </p>
             </div>
           </div>
           <div className="hidden items-center gap-2 xl:flex">
             <StatusBadge status={trace?.status ?? 'ready'} />
             <span className="rounded-md border border-border-default px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-text-muted">
-              {caseId ?? 'No active case'}
+              {caseId ?? t('no_active_case')}
             </span>
           </div>
         </div>

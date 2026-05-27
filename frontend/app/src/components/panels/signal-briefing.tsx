@@ -10,6 +10,7 @@ import { fmtPaisa, fmtTimestamp, truncId, cn } from '@/lib/utils'
 import { Crosshair, Zap, Scale, ShieldAlert, BarChart3, AlertTriangle } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { SSEAgentVerdict, ThreatIndicator } from '@/lib/types'
+import { useT } from '@/lib/i18n'
 
 const THREAT_COLORS: Record<string, { bg: string; border: string; text: string; glow: string }> = {
   critical: { bg: 'bg-red-500/15', border: 'border-red-500/40', text: 'text-red-400', glow: 'shadow-red-500/20 shadow-lg' },
@@ -26,6 +27,7 @@ export function SignalBriefing() {
   const selectedScenarioId = useSimulationStore((s) => s.selectedScenarioId)
   const { data: threatData } = useThreatSummary()
   const { data: riskData } = useRiskDistribution()
+  const t = useT()
 
   const latestVerdict = [...agentLog].reverse().find((entry) => entry.type === 'verdict')
   const selectedScenario = selectedScenarioId ? scenarios.get(selectedScenarioId) ?? null : null
@@ -42,7 +44,7 @@ export function SignalBriefing() {
   return (
     <div className="p-2.5">
       <div className="mb-2.5 px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-text-secondary">
-        Signal Briefing
+        {t('signal_briefing')}
       </div>
       <div className="space-y-2">
         {/* Threat Level Indicator */}
@@ -53,7 +55,7 @@ export function SignalBriefing() {
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.12em] text-text-muted">
               <ShieldAlert className={cn('w-3.5 h-3.5', colors.text)} />
-              <span>Threat Level</span>
+              <span>{t('threat_level')}</span>
             </div>
             <span className={cn('text-[11px] font-bold uppercase tracking-wider', colors.text)}>
               {threatLevel}
@@ -89,7 +91,7 @@ export function SignalBriefing() {
             <div className="flex items-center justify-between mb-2 text-[9px] uppercase tracking-[0.12em] text-text-muted">
               <div className="flex items-center gap-1.5">
                 <BarChart3 className="w-3 h-3 text-accent-primary/70" />
-                <span>Risk Distribution</span>
+                <span>{t('risk_distribution')}</span>
               </div>
               <span className="font-mono tabular-nums">{riskData.total} scored</span>
             </div>
@@ -113,36 +115,36 @@ export function SignalBriefing() {
               })}
             </div>
             <div className="flex justify-between mt-1 text-[7px] font-mono text-text-muted">
-              <span>Low</span>
+              <span>{t('low')}</span>
               <span>Mean: {(riskData.mean * 100).toFixed(1)}%</span>
-              <span>High</span>
+              <span>{t('high')}</span>
             </div>
           </div>
         )}
 
         <BriefingCard
           icon={Crosshair}
-          title="Current Scenario"
+          title={t('current_scenario')}
           body={
             currentScenario
               ? `${currentScenario.attack_label} | ${currentScenario.events_ingested}/${currentScenario.events_generated} events | ${currentScenario.status}`
-              : 'No simulation selected yet'
+              : t('no_sim_selected')
           }
-          meta={currentScenario ? truncId(currentScenario.scenario_id, 8) : 'idle'}
+          meta={currentScenario ? truncId(currentScenario.scenario_id, 8) : t('idle')}
         />
 
         <BriefingCard
           icon={Zap}
-          title="Latest Injected Event"
-          body={latestEvent ? summarizeEvent(latestEvent) : 'No synthetic event has entered the pipeline yet'}
-          meta={latestEvent ? fmtTimestamp(latestEvent.timestamp) : 'awaiting'}
+          title={t('latest_event')}
+          body={latestEvent ? summarizeEvent(latestEvent) : t('no_event_yet')}
+          meta={latestEvent ? fmtTimestamp(latestEvent.timestamp) : t('awaiting')}
         />
 
         {/* Latest Verdict -- special card with severity badge */}
         <div className="rounded-md border border-border-subtle bg-bg-elevated/70 p-2.5 card-hover transition-all duration-200">
           <div className="mb-1.5 flex items-center gap-1.5 text-[9px] uppercase tracking-[0.12em] text-text-muted">
             <Scale className="w-3 h-3 text-accent-primary/70" />
-            <span>Latest Verdict</span>
+            <span>{t('latest_verdict')}</span>
           </div>
           {latestVerdict ? (
             <>
@@ -161,7 +163,7 @@ export function SignalBriefing() {
             </>
           ) : (
             <div className="text-[10px] leading-relaxed text-text-muted">
-              No agent verdict yet. Once LLM-backed investigations run, this panel will summarize the latest decision and why it was made.
+              {t('no_verdict_yet')}
             </div>
           )}
         </div>

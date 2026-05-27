@@ -4,8 +4,10 @@
 
 import { SystemMetrics } from '@/components/panels/system-metrics'
 import { Cpu, Activity } from 'lucide-react'
+import { useT } from '@/lib/i18n'
 
 export function SystemPage() {
+  const t = useT()
   return (
     <div className="h-full flex flex-col">
       {/* Page header */}
@@ -15,11 +17,11 @@ export function SystemPage() {
         </div>
         <div>
           <h1 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            System Health
+            {t('system_health')}
             <Activity className="w-3.5 h-3.5 text-text-muted" />
           </h1>
           <p className="text-[10px] text-text-secondary mt-0.5">
-            Hardware telemetry, pipeline throughput, agent performance, and graph analytics
+            {t('system_subtitle')}
           </p>
         </div>
       </div>

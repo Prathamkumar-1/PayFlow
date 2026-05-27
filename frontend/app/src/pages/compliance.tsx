@@ -5,6 +5,7 @@
 // ============================================================================
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useT } from '@/lib/i18n'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Shield, ShieldCheck, ShieldAlert, FileCheck, Scale, AlertTriangle,
@@ -119,6 +120,7 @@ function Panel({ title, icon: Icon, accent, children, className }: {
 // ============================================================================
 
 function RuleEnginePanel() {
+  const t = useT()
   const queryClient = useQueryClient()
   const { data: rulesData } = useQuery({
     queryKey: ['fraud', 'rules'],
@@ -146,19 +148,19 @@ function RuleEnginePanel() {
   const rules = rulesData?.rules ?? []
 
   return (
-    <Panel title="Rule Engine" icon={Scale} accent={ACCENT.emerald}>
+    <Panel title={t('rule_engine')} icon={Scale} accent={ACCENT.emerald}>
       {/* Stats strip */}
       <div className="flex gap-2 mb-3">
         <div className="flex-1 rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-2.5 py-1.5 text-center">
-          <p className="text-[9px] text-text-muted uppercase tracking-wider">Evaluations</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wider">{t('evaluations')}</p>
           <p className="text-xs font-bold text-emerald-400 tabular-nums">{ruleStats?.total_evaluations ?? 0}</p>
         </div>
         <div className="flex-1 rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-2.5 py-1.5 text-center">
-          <p className="text-[9px] text-text-muted uppercase tracking-wider">Rules Active</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wider">{t('rules_active')}</p>
           <p className="text-xs font-bold text-cyan-400 tabular-nums">{rules.filter(r => r.enabled).length}/{rules.length}</p>
         </div>
         <div className="flex-1 rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-2.5 py-1.5 text-center">
-          <p className="text-[9px] text-text-muted uppercase tracking-wider">Avg Eval</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wider">{t('avg_eval')}</p>
           <p className="text-xs font-bold text-violet-400 tabular-nums">{(ruleStats?.last_evaluation_ms ?? 0).toFixed(1)}ms</p>
         </div>
       </div>
@@ -201,7 +203,7 @@ function RuleEnginePanel() {
           </div>
         ))}
         {rules.length === 0 && (
-          <p className="text-[10px] text-text-muted text-center py-4">No rules configured</p>
+          <p className="text-[10px] text-text-muted text-center py-4">{t('no_rules')}</p>
         )}
       </div>
     </Panel>
@@ -213,6 +215,7 @@ function RuleEnginePanel() {
 // ============================================================================
 
 function RegulatoryReportsPanel() {
+  const t = useT()
   const { data: reportsData } = useQuery({
     queryKey: ['fraud', 'reports'],
     queryFn: () => fetchReports(undefined, 30),
@@ -221,10 +224,10 @@ function RegulatoryReportsPanel() {
 
   const reports = reportsData?.reports ?? []
 
-  const typeIcon = (t: string) => {
-    if (t === 'STR') return <AlertTriangle className="w-3 h-3 text-rose-400" />
-    if (t === 'CTR') return <Banknote className="w-3 h-3 text-amber-400" />
-    if (t === 'FMR') return <FileText className="w-3 h-3 text-cyan-400" />
+  const typeIcon = (rtype: string) => {
+    if (rtype === 'STR') return <AlertTriangle className="w-3 h-3 text-rose-400" />
+    if (rtype === 'CTR') return <Banknote className="w-3 h-3 text-amber-400" />
+    if (rtype === 'FMR') return <FileText className="w-3 h-3 text-cyan-400" />
     return <FileCheck className="w-3 h-3 text-text-muted" />
   }
 
@@ -235,7 +238,7 @@ function RegulatoryReportsPanel() {
   }
 
   return (
-    <Panel title="Regulatory Filings" icon={FileCheck} accent={ACCENT.amber}>
+    <Panel title={t('regulatory_filings')} icon={FileCheck} accent={ACCENT.amber}>
       {/* Summary counts */}
       <div className="flex gap-2 mb-3">
         {(['STR', 'CTR', 'FMR'] as const).map(type => {
@@ -266,7 +269,7 @@ function RegulatoryReportsPanel() {
           </div>
         ))}
         {reports.length === 0 && (
-          <p className="text-[10px] text-text-muted text-center py-4">No regulatory filings yet</p>
+          <p className="text-[10px] text-text-muted text-center py-4">{t('no_filings')}</p>
         )}
       </div>
     </Panel>
@@ -278,6 +281,7 @@ function RegulatoryReportsPanel() {
 // ============================================================================
 
 function AMLStagePanel() {
+  const t = useT()
   const { data: amlStats } = useQuery({
     queryKey: ['fraud', 'aml', 'stats'],
     queryFn: fetchAMLStats,
@@ -286,8 +290,8 @@ function AMLStagePanel() {
 
   const stages = [
     {
-      name: 'Placement',
-      desc: 'Initial deposit of illicit funds',
+      nameKey: 'placement' as const,
+      descKey: 'placement_desc' as const,
       icon: Layers,
       color: 'text-rose-400',
       bg: 'bg-rose-400/10 border-rose-400/20',
@@ -295,8 +299,8 @@ function AMLStagePanel() {
       alerts: amlStats?.placement?.alerts_raised ?? 0,
     },
     {
-      name: 'Layering',
-      desc: 'Complex fund movement via shell entities',
+      nameKey: 'layering' as const,
+      descKey: 'layering_desc' as const,
       icon: GitBranch,
       color: 'text-amber-400',
       bg: 'bg-amber-400/10 border-amber-400/20',
@@ -304,8 +308,8 @@ function AMLStagePanel() {
       alerts: 0,
     },
     {
-      name: 'Integration',
-      desc: 'Re-entry of laundered funds into economy',
+      nameKey: 'integration_stage' as const,
+      descKey: 'integration_desc' as const,
       icon: Network,
       color: 'text-violet-400',
       bg: 'bg-violet-400/10 border-violet-400/20',
@@ -315,28 +319,28 @@ function AMLStagePanel() {
   ]
 
   return (
-    <Panel title="AML Stage Detection" icon={Layers} accent={ACCENT.rose}>
+    <Panel title={t('aml_stage_detection')} icon={Layers} accent={ACCENT.rose}>
       <div className="space-y-2">
         {stages.map(stage => {
           const alertRate = stage.evals > 0 ? ((stage.alerts / stage.evals) * 100).toFixed(1) : '0.0'
           return (
-            <div key={stage.name} className={cn(
+            <div key={stage.nameKey} className={cn(
               'rounded-md border px-3 py-2.5 transition-all',
               stage.bg,
             )}>
               <div className="flex items-center gap-2 mb-1.5">
                 <stage.icon className={cn('w-4 h-4', stage.color)} />
-                <span className="text-[11px] font-semibold text-text-primary">{stage.name}</span>
+                <span className="text-[11px] font-semibold text-text-primary">{t(stage.nameKey)}</span>
                 {stage.alerts > 0 && (
                   <span className="ml-auto flex items-center gap-1 text-[9px] text-rose-400 font-bold">
-                    <Radio className="w-3 h-3 animate-pulse" /> {stage.alerts} alerts
+                    <Radio className="w-3 h-3 animate-pulse" /> {stage.alerts} {t('alerts')}
                   </span>
                 )}
               </div>
-              <p className="text-[9px] text-text-muted mb-1.5">{stage.desc}</p>
+              <p className="text-[9px] text-text-muted mb-1.5">{t(stage.descKey)}</p>
               <div className="flex gap-3 text-[9px]">
-                <span className="text-text-muted">Evaluations: <span className="text-text-secondary font-medium">{stage.evals}</span></span>
-                <span className="text-text-muted">Alert Rate: <span className={cn('font-medium', parseFloat(alertRate) > 10 ? 'text-rose-400' : 'text-emerald-400')}>{alertRate}%</span></span>
+                <span className="text-text-muted">{t('evaluations')}: <span className="text-text-secondary font-medium">{stage.evals}</span></span>
+                <span className="text-text-muted">{t('alert_rate')} <span className={cn('font-medium', parseFloat(alertRate) > 10 ? 'text-rose-400' : 'text-emerald-400')}>{alertRate}%</span></span>
               </div>
             </div>
           )
@@ -351,6 +355,7 @@ function AMLStagePanel() {
 // ============================================================================
 
 function CFRRegistryPanel() {
+  const t = useT()
   const { data: cfrStats } = useQuery({
     queryKey: ['fraud', 'cfr', 'stats'],
     queryFn: fetchCFRStats,
@@ -361,14 +366,14 @@ function CFRRegistryPanel() {
   const categories = registry?.categories ?? {}
 
   return (
-    <Panel title="Central Fraud Registry (RBI)" icon={Landmark} accent={ACCENT.indigo}>
+    <Panel title={t('cfr_registry')} icon={Landmark} accent={ACCENT.indigo}>
       <div className="grid grid-cols-2 gap-2 mb-3">
         <div className="rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-2.5 py-1.5 text-center">
-          <p className="text-[9px] text-text-muted uppercase tracking-wider">Records</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wider">{t('records')}</p>
           <p className="text-xs font-bold text-indigo-400 tabular-nums">{registry?.total_records ?? 0}</p>
         </div>
         <div className="rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-2.5 py-1.5 text-center">
-          <p className="text-[9px] text-text-muted uppercase tracking-wider">Accounts</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wider">{t('accounts')}</p>
           <p className="text-xs font-bold text-cyan-400 tabular-nums">{registry?.unique_accounts ?? 0}</p>
         </div>
       </div>
@@ -376,7 +381,7 @@ function CFRRegistryPanel() {
       {/* Category breakdown */}
       {Object.entries(categories).length > 0 && (
         <div className="space-y-1">
-          <p className="text-[9px] text-text-muted uppercase tracking-wider mb-1.5">Fraud Categories</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wider mb-1.5">{t('fraud_categories')}</p>
           {Object.entries(categories).map(([cat, count]) => (
             <div key={cat} className="flex items-center gap-2 px-2 py-1.5 rounded bg-bg-elevated/30 border border-border-subtle/15">
               <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />
@@ -387,7 +392,7 @@ function CFRRegistryPanel() {
         </div>
       )}
       {Object.entries(categories).length === 0 && (
-        <p className="text-[10px] text-text-muted text-center py-3">Registry empty — no reports filed yet</p>
+        <p className="text-[10px] text-text-muted text-center py-3">{t('registry_empty')}</p>
       )}
     </Panel>
   )
@@ -398,6 +403,7 @@ function CFRRegistryPanel() {
 // ============================================================================
 
 function FIUIntelligencePanel() {
+  const t = useT()
   const { data: fiuStats } = useQuery({
     queryKey: ['fraud', 'fiu', 'stats'],
     queryFn: fetchFIUStats,
@@ -412,16 +418,16 @@ function FIUIntelligencePanel() {
   const stats = fiuStats ?? {} as FIUStatsResponse
 
   return (
-    <Panel title="FIU-IND Intelligence" icon={Eye} accent={ACCENT.teal}>
+    <Panel title={t('fiu_ind')} icon={Eye} accent={ACCENT.teal}>
       {/* KPI tiles */}
       <div className="grid grid-cols-3 gap-1.5 mb-3">
         {[
-          { label: 'STR Collected', val: stats.str_collected ?? 0, color: 'text-rose-400' },
-          { label: 'Alerts', val: stats.alerts_collected ?? 0, color: 'text-amber-400' },
-          { label: 'Packages', val: stats.packages_prepared ?? 0, color: 'text-cyan-400' },
-          { label: 'Disseminated', val: stats.packages_disseminated ?? 0, color: 'text-emerald-400' },
-          { label: 'High Risk', val: stats.high_risk_accounts ?? 0, color: 'text-rose-400' },
-          { label: 'Total Entries', val: stats.total_entries ?? 0, color: 'text-violet-400' },
+          { label: t('str_collected'), val: stats.str_collected ?? 0, color: 'text-rose-400' },
+          { label: t('alerts'), val: stats.alerts_collected ?? 0, color: 'text-amber-400' },
+          { label: t('packages'), val: stats.packages_prepared ?? 0, color: 'text-cyan-400' },
+          { label: t('disseminated'), val: stats.packages_disseminated ?? 0, color: 'text-emerald-400' },
+          { label: t('high_risk_word'), val: stats.high_risk_accounts ?? 0, color: 'text-rose-400' },
+          { label: t('total_entries'), val: stats.total_entries ?? 0, color: 'text-violet-400' },
         ].map(kpi => (
           <div key={kpi.label} className="rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-1.5 py-1.5 text-center">
             <p className="text-[8px] text-text-muted uppercase tracking-wider leading-tight">{kpi.label}</p>
@@ -434,7 +440,7 @@ function FIUIntelligencePanel() {
       {(highRisk?.count ?? 0) > 0 && (
         <div>
           <p className="text-[9px] text-text-muted uppercase tracking-wider mb-1.5 flex items-center gap-1">
-            <ShieldAlert className="w-3 h-3 text-rose-400" /> High-Risk Accounts
+            <ShieldAlert className="w-3 h-3 text-rose-400" /> {t('high_risk_accounts')}
           </p>
           <div className="space-y-1 max-h-[140px] overflow-auto custom-scrollbar">
             {highRisk!.high_risk_accounts.map(acc => (
@@ -455,6 +461,7 @@ function FIUIntelligencePanel() {
 // ============================================================================
 
 function InvestigationPanel() {
+  const t = useT()
   const { data: invStats } = useQuery({
     queryKey: ['fraud', 'investigation', 'stats'],
     queryFn: fetchInvestigationStats,
@@ -464,15 +471,15 @@ function InvestigationPanel() {
   const stats = invStats ?? {} as InvestigationStatsResponse
 
   const stages = [
-    { label: 'Open Cases', val: stats.open_cases ?? 0, icon: Search, color: 'text-cyan-400', bg: 'bg-cyan-400/10 border-cyan-400/15' },
-    { label: 'Referred to LEA', val: stats.referred_cases ?? 0, icon: Gavel, color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/15' },
-    { label: 'Legal Proceedings', val: stats.legal_proceedings ?? 0, icon: Scale, color: 'text-rose-400', bg: 'bg-rose-400/10 border-rose-400/15' },
+    { label: t('open_cases'), val: stats.open_cases ?? 0, icon: Search, color: 'text-cyan-400', bg: 'bg-cyan-400/10 border-cyan-400/15' },
+    { label: t('referred_lea'), val: stats.referred_cases ?? 0, icon: Gavel, color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/15' },
+    { label: t('legal_proceedings'), val: stats.legal_proceedings ?? 0, icon: Scale, color: 'text-rose-400', bg: 'bg-rose-400/10 border-rose-400/15' },
   ]
 
   return (
-    <Panel title="Investigation Management" icon={Gavel} accent={ACCENT.orange}>
+    <Panel title={t('investigation_mgmt')} icon={Gavel} accent={ACCENT.orange}>
       <div className="rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-3 py-2 mb-3 text-center">
-        <p className="text-[9px] text-text-muted uppercase tracking-wider">Total Cases</p>
+        <p className="text-[9px] text-text-muted uppercase tracking-wider">{t('total_cases')}</p>
         <p className="text-lg font-bold text-orange-400 tabular-nums">{stats.total_cases ?? 0}</p>
       </div>
 
@@ -488,7 +495,7 @@ function InvestigationPanel() {
 
       {(stats.total_fraud_amount_paisa ?? 0) > 0 && (
         <div className="mt-3 rounded-md bg-rose-400/5 border border-rose-400/10 px-3 py-2 text-center">
-          <p className="text-[9px] text-text-muted uppercase tracking-wider">Total Fraud Amount</p>
+          <p className="text-[9px] text-text-muted uppercase tracking-wider">{t('total_fraud_amount')}</p>
           <p className="text-sm font-bold text-rose-400 tabular-nums">
             ₹{((stats.total_fraud_amount_paisa ?? 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </p>
@@ -503,6 +510,7 @@ function InvestigationPanel() {
 // ============================================================================
 
 function MuleDetectionPanel() {
+  const t = useT()
   const { data: muleStats } = useQuery({
     queryKey: ['fraud', 'mule', 'stats'],
     queryFn: fetchMuleStats,
@@ -525,19 +533,19 @@ function MuleDetectionPanel() {
   const accountStats = muleStats?.account_scorer
 
   return (
-    <Panel title="Mule Detection (Carbanak)" icon={UserX} accent={ACCENT.pink}>
+    <Panel title={t('mule_detection')} icon={UserX} accent={ACCENT.pink}>
       {/* KPI strip */}
       <div className="flex gap-2 mb-3">
         <div className="flex-1 rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-2 py-1.5 text-center">
-          <p className="text-[8px] text-text-muted uppercase tracking-wider">Chains</p>
+          <p className="text-[8px] text-text-muted uppercase tracking-wider">{t('chains')}</p>
           <p className="text-xs font-bold text-pink-400 tabular-nums">{chainStats?.total_chains_detected ?? 0}</p>
         </div>
         <div className="flex-1 rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-2 py-1.5 text-center">
-          <p className="text-[8px] text-text-muted uppercase tracking-wider">Suspected</p>
+          <p className="text-[8px] text-text-muted uppercase tracking-wider">{t('suspected')}</p>
           <p className="text-xs font-bold text-rose-400 tabular-nums">{accountStats?.suspected_mules ?? 0}</p>
         </div>
         <div className="flex-1 rounded-md bg-bg-elevated/50 border border-border-subtle/25 px-2 py-1.5 text-center">
-          <p className="text-[8px] text-text-muted uppercase tracking-wider">Scored</p>
+          <p className="text-[8px] text-text-muted uppercase tracking-wider">{t('scored')}</p>
           <p className="text-xs font-bold text-violet-400 tabular-nums">{accountStats?.total_scored ?? 0}</p>
         </div>
       </div>
@@ -546,7 +554,7 @@ function MuleDetectionPanel() {
       {chains.length > 0 && (
         <div className="mb-3">
           <p className="text-[9px] text-text-muted uppercase tracking-wider mb-1.5 flex items-center gap-1">
-            <Route className="w-3 h-3 text-pink-400" /> Detected Chains
+            <Route className="w-3 h-3 text-pink-400" /> {t('detected_chains')}
           </p>
           <div className="space-y-1.5 max-h-[120px] overflow-auto custom-scrollbar">
             {chains.slice(0, 8).map((chain, i) => (
@@ -571,7 +579,7 @@ function MuleDetectionPanel() {
       {mules.length > 0 && (
         <div>
           <p className="text-[9px] text-text-muted uppercase tracking-wider mb-1.5 flex items-center gap-1">
-            <UserX className="w-3 h-3 text-rose-400" /> Suspected Accounts
+            <UserX className="w-3 h-3 text-rose-400" /> {t('suspected_accounts')}
           </p>
           <div className="space-y-1 max-h-[120px] overflow-auto custom-scrollbar">
             {mules.slice(0, 8).map(mule => (
@@ -595,7 +603,7 @@ function MuleDetectionPanel() {
       )}
 
       {chains.length === 0 && mules.length === 0 && (
-        <p className="text-[10px] text-text-muted text-center py-4">No mule activity detected yet</p>
+        <p className="text-[10px] text-text-muted text-center py-4">{t('no_mule')}</p>
       )}
     </Panel>
   )
@@ -606,6 +614,7 @@ function MuleDetectionPanel() {
 // ============================================================================
 
 function AnomalyDetectionPanel() {
+  const t = useT()
   const { data: anomalyStats } = useQuery({
     queryKey: ['fraud', 'anomaly', 'stats'],
     queryFn: fetchAnomalyStats,
@@ -622,20 +631,20 @@ function AnomalyDetectionPanel() {
   const clusters = clustersData?.clusters ?? []
 
   return (
-    <Panel title="Anomaly Detection" icon={Brain} accent={ACCENT.violet}>
+    <Panel title={t('anomaly_detection')} icon={Brain} accent={ACCENT.violet}>
       {/* Model stats */}
       <div className="space-y-1.5 mb-3">
         {[
-          { label: 'Isolation Forest', scored: iforest?.total_scored ?? 0, anomalies: iforest?.anomalies_detected ?? 0, color: 'text-violet-400', bg: 'bg-violet-400/10 border-violet-400/15' },
-          { label: 'Autoencoder', scored: autoenc?.total_scored ?? 0, anomalies: autoenc?.anomalies_detected ?? 0, color: 'text-cyan-400', bg: 'bg-cyan-400/10 border-cyan-400/15' },
+          { label: t('isolation_forest'), scored: iforest?.total_scored ?? 0, anomalies: iforest?.anomalies_detected ?? 0, color: 'text-violet-400', bg: 'bg-violet-400/10 border-violet-400/15' },
+          { label: t('autoencoder'), scored: autoenc?.total_scored ?? 0, anomalies: autoenc?.anomalies_detected ?? 0, color: 'text-cyan-400', bg: 'bg-cyan-400/10 border-cyan-400/15' },
         ].map(model => (
           <div key={model.label} className={cn('flex items-center gap-2.5 px-3 py-2 rounded-md border', model.bg)}>
             <Brain className={cn('w-4 h-4 shrink-0', model.color)} />
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-medium text-text-primary">{model.label}</p>
               <p className="text-[9px] text-text-muted">
-                {model.scored} scored · <span className={model.anomalies > 0 ? 'text-rose-400 font-medium' : ''}>
-                  {model.anomalies} anomalies
+                {model.scored} {t('scored')} · <span className={model.anomalies > 0 ? 'text-rose-400 font-medium' : ''}>
+                  {model.anomalies} {t('anomalies')}
                 </span>
               </p>
             </div>
@@ -647,7 +656,7 @@ function AnomalyDetectionPanel() {
       {clusters.length > 0 && (
         <div>
           <p className="text-[9px] text-text-muted uppercase tracking-wider mb-1.5 flex items-center gap-1">
-            <Users className="w-3 h-3 text-violet-400" /> Suspicious Communities
+            <Users className="w-3 h-3 text-violet-400" /> {t('suspicious_communities')}
           </p>
           <div className="space-y-1 max-h-[130px] overflow-auto custom-scrollbar">
             {clusters.slice(0, 8).map(cluster => (
@@ -674,6 +683,7 @@ function AnomalyDetectionPanel() {
 // ============================================================================
 
 function CentralityPanel() {
+  const t = useT()
   const { data: intermediariesData } = useQuery({
     queryKey: ['fraud', 'centrality', 'intermediaries'],
     queryFn: () => fetchIntermediaries(15),
@@ -683,9 +693,9 @@ function CentralityPanel() {
   const intermediaries = intermediariesData?.intermediaries ?? []
 
   return (
-    <Panel title="Centrality Analysis" icon={Network} accent={ACCENT.blue}>
+    <Panel title={t('centrality_analysis')} icon={Network} accent={ACCENT.blue}>
       {intermediaries.length === 0 ? (
-        <p className="text-[10px] text-text-muted text-center py-4">No intermediaries detected yet</p>
+        <p className="text-[10px] text-text-muted text-center py-4">{t('no_intermediaries')}</p>
       ) : (
         <div className="space-y-1.5">
           {intermediaries.slice(0, 12).map((node, i) => {
@@ -720,6 +730,7 @@ function CentralityPanel() {
 // ============================================================================
 
 function VictimTracingPanel() {
+  const t = useT()
   const { data: victimStats } = useQuery({
     queryKey: ['fraud', 'victim', 'stats'],
     queryFn: fetchVictimStats,
@@ -727,7 +738,7 @@ function VictimTracingPanel() {
   })
 
   return (
-    <Panel title="Victim Fund Tracing" icon={Route} accent={ACCENT.cyan}>
+    <Panel title={t('victim_tracing')} icon={Route} accent={ACCENT.cyan}>
       <div className="flex flex-col items-center justify-center py-6 gap-3">
         <div className="flex items-center justify-center w-14 h-14 rounded-full bg-cyan-400/10 border border-cyan-400/20">
           <Route className="w-7 h-7 text-cyan-400" />
@@ -736,10 +747,10 @@ function VictimTracingPanel() {
           <p className="text-2xl font-bold text-cyan-400 tabular-nums">
             {victimStats?.total_victims_traced ?? 0}
           </p>
-          <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1">Victims Traced</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1">{t('victims_traced')}</p>
         </div>
         <p className="text-[9px] text-text-muted text-center max-w-[220px] leading-relaxed">
-          Downstream fund-flow mapping tracks the complete movement of stolen funds through mule chains to identify all victim accounts.
+          {t('victim_tracing_desc')}
         </p>
       </div>
     </Panel>
@@ -751,6 +762,7 @@ function VictimTracingPanel() {
 // ============================================================================
 
 function GatePanel() {
+  const t = useT()
   const { data: gateStats } = useQuery({
     queryKey: ['fraud', 'gate', 'stats'],
     queryFn: fetchGateStats,
@@ -761,17 +773,17 @@ function GatePanel() {
   const total = stats.total_evaluations ?? 0
 
   const segments = [
-    { label: 'Approved', count: stats.approved ?? 0, color: 'bg-emerald-400', text: 'text-emerald-400' },
-    { label: 'Held', count: stats.held ?? 0, color: 'bg-amber-400', text: 'text-amber-400' },
-    { label: 'Blocked', count: stats.blocked ?? 0, color: 'bg-rose-400', text: 'text-rose-400' },
+    { label: t('approved'), count: stats.approved ?? 0, color: 'bg-emerald-400', text: 'text-emerald-400' },
+    { label: t('held'), count: stats.held ?? 0, color: 'bg-amber-400', text: 'text-amber-400' },
+    { label: t('blocked'), count: stats.blocked ?? 0, color: 'bg-rose-400', text: 'text-rose-400' },
   ]
 
   return (
-    <Panel title="Pre-Approval Gate" icon={Shield} accent={ACCENT.emerald}>
+    <Panel title={t('pre_approval_gate')} icon={Shield} accent={ACCENT.emerald}>
       {/* Total evaluations */}
       <div className="text-center mb-3">
         <p className="text-2xl font-bold text-text-primary tabular-nums">{total}</p>
-        <p className="text-[9px] text-text-muted uppercase tracking-wider">Transactions Evaluated</p>
+        <p className="text-[9px] text-text-muted uppercase tracking-wider">{t('transactions_evaluated')}</p>
       </div>
 
       {/* Proportion bar */}
@@ -799,7 +811,7 @@ function GatePanel() {
       {(stats.avg_evaluation_ms ?? 0) > 0 && (
         <div className="mt-2 text-center">
           <p className="text-[9px] text-text-muted">
-            Avg evaluation: <span className="text-emerald-400 font-medium">{(stats.avg_evaluation_ms ?? 0).toFixed(1)}ms</span>
+            {t('avg_evaluation')} <span className="text-emerald-400 font-medium">{(stats.avg_evaluation_ms ?? 0).toFixed(1)}ms</span>
           </p>
         </div>
       )}
@@ -812,6 +824,7 @@ function GatePanel() {
 // ============================================================================
 
 export function CompliancePage() {
+  const t = useT()
   // Aggregate stats for the hero metrics strip
   const { data: gateStats } = useQuery({ queryKey: ['fraud', 'gate', 'stats'], queryFn: fetchGateStats, refetchInterval: REFETCH_INTERVAL })
   const { data: ruleStats } = useQuery({ queryKey: ['fraud', 'rules', 'stats'], queryFn: fetchRuleStats, refetchInterval: REFETCH_INTERVAL })
@@ -832,11 +845,11 @@ export function CompliancePage() {
           </div>
           <div>
             <h1 className="text-sm font-semibold text-text-primary tracking-wide flex items-center gap-2">
-              Compliance & Regulatory Intelligence
+              {t('compliance_title')}
               <Landmark className="w-4 h-4 text-indigo-400/80" />
             </h1>
             <p className="text-[10px] text-text-muted leading-relaxed mt-0.5">
-              Rule engine, STR/CTR/FMR filings, CFR-RBI registry, AML stage detection, FIU-IND intelligence, investigation management, mule chain analysis & victim fund tracing.
+              {t('compliance_subtitle')}
             </p>
           </div>
         </div>
@@ -845,14 +858,14 @@ export function CompliancePage() {
       {/* ---- Metrics Strip ---- */}
       <div className="shrink-0 px-5 pb-3 animate-fade-in" style={{ animationDelay: '30ms' }}>
         <div className="grid grid-cols-4 xl:grid-cols-8 gap-2">
-          <MetricCard icon={Shield} label="Gate Evals" value={gateStats?.total_evaluations ?? 0} accent={ACCENT.emerald} sub={`${gateStats?.blocked ?? 0} blocked`} />
-          <MetricCard icon={Scale} label="Rule Evals" value={ruleStats?.total_evaluations ?? 0} accent={ACCENT.cyan} />
-          <MetricCard icon={Landmark} label="CFR Records" value={cfrStats?.registry?.total_records ?? 0} accent={ACCENT.indigo} />
-          <MetricCard icon={Layers} label="AML Alerts" value={(amlStats?.placement?.alerts_raised ?? 0) + (amlStats?.integration?.alerts_raised ?? 0)} accent={ACCENT.rose} pulse={(amlStats?.placement?.alerts_raised ?? 0) > 0} />
-          <MetricCard icon={Eye} label="FIU STRs" value={fiuStats?.str_collected ?? 0} accent={ACCENT.teal} sub={`${fiuStats?.packages_prepared ?? 0} packages`} />
-          <MetricCard icon={Gavel} label="Cases" value={invStats?.total_cases ?? 0} accent={ACCENT.orange} sub={`${invStats?.open_cases ?? 0} open`} />
-          <MetricCard icon={UserX} label="Mule Chains" value={muleStats?.chain_detector?.total_chains_detected ?? 0} accent={ACCENT.pink} />
-          <MetricCard icon={Route} label="Victims Traced" value={victimStats?.total_victims_traced ?? 0} accent={ACCENT.cyan} />
+          <MetricCard icon={Shield} label={t('gate_evals')} value={gateStats?.total_evaluations ?? 0} accent={ACCENT.emerald} sub={`${gateStats?.blocked ?? 0} ${t('blocked')}`} />
+          <MetricCard icon={Scale} label={t('rule_evals')} value={ruleStats?.total_evaluations ?? 0} accent={ACCENT.cyan} />
+          <MetricCard icon={Landmark} label={t('cfr_records')} value={cfrStats?.registry?.total_records ?? 0} accent={ACCENT.indigo} />
+          <MetricCard icon={Layers} label={t('aml_alerts')} value={(amlStats?.placement?.alerts_raised ?? 0) + (amlStats?.integration?.alerts_raised ?? 0)} accent={ACCENT.rose} pulse={(amlStats?.placement?.alerts_raised ?? 0) > 0} />
+          <MetricCard icon={Eye} label={t('fiu_strs')} value={fiuStats?.str_collected ?? 0} accent={ACCENT.teal} sub={`${fiuStats?.packages_prepared ?? 0} ${t('packages')}`} />
+          <MetricCard icon={Gavel} label={t('cases')} value={invStats?.total_cases ?? 0} accent={ACCENT.orange} sub={`${invStats?.open_cases ?? 0} ${t('open_word')}`} />
+          <MetricCard icon={UserX} label={t('mule_chains')} value={muleStats?.chain_detector?.total_chains_detected ?? 0} accent={ACCENT.pink} />
+          <MetricCard icon={Route} label={t('victims_traced')} value={victimStats?.total_victims_traced ?? 0} accent={ACCENT.cyan} />
         </div>
       </div>
 

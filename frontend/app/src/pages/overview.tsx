@@ -20,6 +20,7 @@ import { RightSidebar } from '@/components/layout/right-sidebar'
 import { useUIStore } from '@/stores/use-ui-store'
 import { fmtNum } from '@/lib/utils'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import {
   ArrowRightLeft,
   Brain,
@@ -83,6 +84,7 @@ function StatStrip() {
   const graphSummary = useDashboardStore((s) => s.graphSummary)
   const { data: snap } = useSnapshot()
   const tps = useThroughput()
+  const t = useT()
 
   const orch = sseOrch ?? snap?.orchestrator ?? null
   const hw = sseHw ?? snap?.hardware ?? null
@@ -94,14 +96,14 @@ function StatStrip() {
 
   const stats: StatDef[] = [
     {
-      label: 'Transactions',
+      label: t('transactions'),
       value: fmtNum(orch?.events_ingested ?? 0),
       accent: 'text-accent-primary',
       iconAccent: 'text-accent-primary/70',
       Icon: ArrowRightLeft,
     },
     {
-      label: 'Throughput',
+      label: t('throughput'),
       value: `${tps}/s`,
       accent: tps > 0 ? 'text-green-400' : 'text-text-muted',
       iconAccent: tps > 0 ? 'text-green-500/70' : 'text-text-muted/50',
@@ -109,35 +111,35 @@ function StatStrip() {
       pulse: tps > 0,
     },
     {
-      label: 'ML Inferences',
+      label: t('ml_inferences'),
       value: fmtNum(orch?.ml_inferences ?? 0),
       accent: 'text-violet-400',
       iconAccent: 'text-violet-500/70',
       Icon: Brain,
     },
     {
-      label: 'Alerts',
+      label: t('alerts'),
       value: fmtNum(orch?.alerts_routed ?? 0),
       accent: 'text-amber-400',
       iconAccent: 'text-amber-500/70',
       Icon: Bell,
     },
     {
-      label: 'Nodes',
+      label: t('nodes'),
       value: fmtNum(graphSz?.nodes ?? 0),
       accent: 'text-blue-400',
       iconAccent: 'text-blue-500/70',
       Icon: CircleDot,
     },
     {
-      label: 'Edges',
+      label: t('edges'),
       value: fmtNum(graphSz?.edges ?? 0),
       accent: 'text-blue-300',
       iconAccent: 'text-blue-400/70',
       Icon: GitBranch,
     },
     {
-      label: 'Mule Nets',
+      label: t('mule_nets'),
       value: fmtNum(graphMetrics?.mule_detections ?? 0),
       accent: (graphMetrics?.mule_detections ?? 0) > 0 ? 'text-rose-400' : 'text-text-muted',
       iconAccent: (graphMetrics?.mule_detections ?? 0) > 0 ? 'text-rose-500/70' : 'text-text-muted/50',
@@ -145,21 +147,21 @@ function StatStrip() {
       pulse: (graphMetrics?.mule_detections ?? 0) > 0,
     },
     {
-      label: 'Frozen',
+      label: t('frozen'),
       value: fmtNum(pendingAlerts),
       accent: pendingAlerts > 0 ? 'text-red-400' : 'text-text-muted',
       iconAccent: pendingAlerts > 0 ? 'text-red-500/70' : 'text-text-muted/50',
       Icon: Shield,
     },
     {
-      label: 'Fraud Ratio',
+      label: t('fraud_ratio'),
       value: graphSummary.edgeCount === 0 ? '0%' : `${((graphSummary.fraudEdges / graphSummary.edgeCount) * 100).toFixed(1)}%`,
       accent: 'text-rose-400',
       iconAccent: 'text-rose-500/70',
       Icon: TrendingUp,
     },
     {
-      label: 'Suspicious',
+      label: t('suspicious'),
       value: fmtNum(graphSummary.suspiciousNodes),
       accent: 'text-yellow-400',
       iconAccent: 'text-yellow-500/70',
@@ -217,7 +219,9 @@ function CommandRail() {
   const evidence = useCreateEvidencePackage()
   const { data: readiness } = usePS3Readiness()
   const [caseId, setCaseId] = useState<string | null>(null)
-  const [status, setStatus] = useState('Continuous stream online')
+  const [statusKey, setStatusKey] = useState<'continuous_stream' | 'refreshing_intel' | 'playbooks_refreshed' | 'launching_ps3' | 'case_opened' | 'generating_fiu' | 'evidence_ready'>('continuous_stream')
+  const [statusSuffix, setStatusSuffix] = useState('')
+  const t = useT()
 
   const readyCount = useMemo(
     () => readiness?.requirements.filter((item) => item.status === 'ready').length ?? 0,
@@ -225,18 +229,18 @@ function CommandRail() {
   )
 
   async function primeIntel() {
-    setStatus('Refreshing external intelligence')
+    setStatusKey('refreshing_intel'); setStatusSuffix('')
     await refreshIntel.mutateAsync(undefined)
     await simulateIntel.mutateAsync('digital_arrest_mule')
-    setStatus('Adaptive playbooks refreshed')
+    setStatusKey('playbooks_refreshed')
   }
 
   async function launchCase(scenario: PS3ScenarioId = 'rapid_layering') {
-    setStatus('Launching PS3 trace case')
+    setStatusKey('launching_ps3'); setStatusSuffix('')
     const response = await launchPS3.mutateAsync({ scenario, intensity: 'demo', seed: Date.now() % 100000 })
     setActiveCaseId(response.primary_case_id)
     setCaseId(response.primary_case_id)
-    setStatus(`Case ${response.primary_case_id} opened`)
+    setStatusKey('case_opened'); setStatusSuffix(` ${response.primary_case_id}`)
     setActiveTab('investigations')
   }
 
@@ -245,46 +249,47 @@ function CommandRail() {
       await launchCase('round_tripping')
       return
     }
-    setStatus('Generating FIU evidence package')
+    setStatusKey('generating_fiu'); setStatusSuffix('')
     await evidence.mutateAsync(caseId)
-    setStatus(`Evidence package ready for ${caseId}`)
+    setStatusKey('evidence_ready'); setStatusSuffix(` ${caseId}`)
     setActiveTab('investigations')
   }
 
   const busy = refreshIntel.isPending || simulateIntel.isPending || launchPS3.isPending || evidence.isPending
+  const statusText = `${t(statusKey)}${statusSuffix}`
 
   return (
     <section className="shrink-0 border-b border-border-default bg-bg-surface px-4 py-2 shadow-sm">
       <div className="flex flex-wrap items-center gap-2">
         <div className="mr-2 min-w-48">
           <div className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-text-primary">
-            PS3 Proof-of-Concept Command Rail
+            {t('ps3_command_rail')}
           </div>
           <div className="font-mono text-[9px] text-text-muted">
-            Preventive intel {'>'} fund trace {'>'} case workbench {'>'} FIU package | {readyCount}/5 ready | {status}
+            {t('ps3_tagline')} | {readyCount}/5 {t('ready')} | {statusText}
           </div>
         </div>
         <CommandButton
           icon={Sparkles}
-          label="Prime Intel"
+          label={t('prime_intel')}
           busy={busy}
           onClick={() => void primeIntel()}
         />
         <CommandButton
           icon={Play}
-          label="Launch Case"
+          label={t('launch_case')}
           busy={busy}
           onClick={() => void launchCase('rapid_layering')}
         />
         <CommandButton
           icon={FileText}
-          label="FIU Package"
+          label={t('fiu_package')}
           busy={busy}
           onClick={() => void packageEvidence()}
         />
         <CommandButton
           icon={Radar}
-          label="Intel Radar"
+          label={t('intel_radar')}
           onClick={() => setActiveTab('pre-fraud-intel')}
         />
       </div>

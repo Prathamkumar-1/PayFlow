@@ -56,6 +56,7 @@ import {
 } from '@/hooks/use-api'
 import { useUIStore } from '@/stores/use-ui-store'
 import { cn } from '@/lib/utils'
+import { useT } from '@/lib/i18n'
 import type {
   AdaptivePlaybook,
   ExternalThreatSignal,
@@ -392,6 +393,7 @@ type MediaFilter = 'all' | 'images' | 'videos' | 'source_cards' | 'fallbacks'
 function MediaCommandDeck({ previews }: { previews: IntelMediaPreview[] }) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [filter, setFilter] = useState<MediaFilter>('all')
+  const t = useT()
   const sorted = useMemo(() => [...previews].sort((a, b) => mediaRank(a) - mediaRank(b)), [previews])
   const filtered = useMemo(() => sorted.filter((preview) => {
     if (filter === 'images') return isRealImage(preview)
@@ -402,11 +404,11 @@ function MediaCommandDeck({ previews }: { previews: IntelMediaPreview[] }) {
   }), [filter, sorted])
   const selected = filtered.find((preview) => preview.media_id === activeId) ?? filtered[0]
   const filters: Array<{ id: MediaFilter; label: string; count: number }> = [
-    { id: 'all', label: 'All', count: sorted.length },
-    { id: 'images', label: 'Images', count: sorted.filter(isRealImage).length },
-    { id: 'videos', label: 'Videos', count: sorted.filter(isVideoSource).length },
-    { id: 'source_cards', label: 'Source Cards', count: sorted.filter(isSourceCard).length },
-    { id: 'fallbacks', label: 'Fallbacks', count: sorted.filter(isFallbackMedia).length },
+    { id: 'all', label: t('all'), count: sorted.length },
+    { id: 'images', label: t('images'), count: sorted.filter(isRealImage).length },
+    { id: 'videos', label: t('videos'), count: sorted.filter(isVideoSource).length },
+    { id: 'source_cards', label: t('source_cards'), count: sorted.filter(isSourceCard).length },
+    { id: 'fallbacks', label: t('fallbacks'), count: sorted.filter(isFallbackMedia).length },
   ]
   if (!sorted.length) return null
   return (
@@ -439,7 +441,7 @@ function MediaCommandDeck({ previews }: { previews: IntelMediaPreview[] }) {
         <div className="flex min-h-[320px] items-center justify-center rounded-lg border border-dashed border-border-default bg-bg-elevated/45 p-6 text-center">
           <div>
             <Video className="mx-auto mb-3 h-8 w-8 text-text-muted" />
-            <div className="text-sm font-bold text-text-primary">No verified public media in this filter</div>
+            <div className="text-sm font-bold text-text-primary">{t('no_media_filter')}</div>
             <div className="mt-1 max-w-md text-[10px] leading-relaxed text-text-muted">
               PayFlow only shows videos or images when source pages expose real public metadata. Switch to Source Cards to inspect publisher evidence.
             </div>
@@ -499,8 +501,9 @@ function MediaCommandDeck({ previews }: { previews: IntelMediaPreview[] }) {
 
 function LiveVelocityChart({ cockpit }: { cockpit?: IntelCockpitResponse }) {
   const data = cockpit?.signal_timeline ?? []
+  const t = useT()
   return (
-    <Panel title="Live Signal Velocity" icon={Activity} badge={`${cockpit?.metrics.live_mentions ?? 0} mentions`}>
+    <Panel title={t('live_signal_velocity')} icon={Activity} badge={`${cockpit?.metrics.live_mentions ?? 0} mentions`}>
       <div className="h-[220px] p-2">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data}>
@@ -530,8 +533,9 @@ function LiveVelocityChart({ cockpit }: { cockpit?: IntelCockpitResponse }) {
 
 function ChannelExposureChart({ cockpit }: { cockpit?: IntelCockpitResponse }) {
   const data = cockpit?.channel_exposure ?? []
+  const t = useT()
   return (
-    <Panel title="Channel Exposure" icon={Zap}>
+    <Panel title={t('channel_exposure')} icon={Zap}>
       <div className="h-[220px] p-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 8, right: 12, top: 4, bottom: 4 }}>
@@ -551,8 +555,9 @@ function ChannelExposureChart({ cockpit }: { cockpit?: IntelCockpitResponse }) {
 
 function SourceVelocityPanel({ cockpit }: { cockpit?: IntelCockpitResponse }) {
   const data = cockpit?.source_velocity_series ?? []
+  const t = useT()
   return (
-    <Panel title="Source Velocity By Tier" icon={Activity} badge={`${data.length} buckets`}>
+    <Panel title={t('source_velocity')} icon={Activity} badge={`${data.length} buckets`}>
       <div className="h-[220px] p-2">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>
@@ -573,8 +578,9 @@ function SourceVelocityPanel({ cockpit }: { cockpit?: IntelCockpitResponse }) {
 
 function TypologyVelocityPanel({ cockpit }: { cockpit?: IntelCockpitResponse }) {
   const data = cockpit?.typology_velocity_series ?? []
+  const t = useT()
   return (
-    <Panel title="Emerging Typology Velocity" icon={Radar} badge={`${data.length} typologies`}>
+    <Panel title={t('emerging_typology')} icon={Radar} badge={`${data.length} typologies`}>
       <div className="space-y-2 p-3">
         {data.map((row) => (
           <div key={row.typology} className="grid grid-cols-[minmax(0,1fr)_72px_54px] items-center gap-2 rounded-md border border-border-subtle bg-bg-elevated/60 p-2">
@@ -596,8 +602,9 @@ function TypologyVelocityPanel({ cockpit }: { cockpit?: IntelCockpitResponse }) 
 function ChannelTypologyHeatmapPanel({ cockpit }: { cockpit?: IntelCockpitResponse }) {
   const rows = cockpit?.channel_typology_heatmap ?? []
   const channels = ['UPI', 'IMPS', 'DIGITAL_BANKING', 'NEFT', 'RTGS', 'CARDS', 'BRANCH']
+  const t = useT()
   return (
-    <Panel title="Channel X Typology Heatmap" icon={Layers} badge={`${rows.length} rows`}>
+    <Panel title={t('channel_typology_heatmap')} icon={Layers} badge={`${rows.length} rows`}>
       <div className="overflow-auto p-3">
         <div className="min-w-[620px] space-y-2">
           <div className="grid grid-cols-[170px_repeat(7,52px)_54px] gap-1 text-[8px] font-bold uppercase tracking-[0.1em] text-text-muted">
@@ -634,6 +641,7 @@ function ChannelTypologyHeatmapPanel({ cockpit }: { cockpit?: IntelCockpitRespon
 
 function MediaEvidenceMatrixPanel({ cockpit }: { cockpit?: IntelCockpitResponse }) {
   const rows = cockpit?.media_evidence_matrix ?? []
+  const t = useT()
   const total = cockpit?.metrics.media_items ?? rows.reduce((sum, row) => sum + row.items, 0)
   const live = cockpit?.metrics.live_media_items ?? 0
   const videos = cockpit?.metrics.real_videos ?? 0
@@ -651,7 +659,7 @@ function MediaEvidenceMatrixPanel({ cockpit }: { cockpit?: IntelCockpitResponse 
     { label: 'Generated fallback posters', value: fallback, ratio: total > 0 ? fallback / total : 0 },
   ]
   return (
-    <Panel title="Media Evidence Health" icon={ImageIcon} badge={`${live} real`}>
+    <Panel title={t('media_evidence_health')} icon={ImageIcon} badge={`${live} real`}>
       <div className="space-y-2 p-3">
         <div className="grid grid-cols-3 gap-2">
           <Metric label="Health" value={pct(health)} accent="text-emerald-300" />
@@ -695,8 +703,9 @@ function MediaEvidenceMatrixPanel({ cockpit }: { cockpit?: IntelCockpitResponse 
 
 function SourceMixPanel({ cockpit }: { cockpit?: IntelCockpitResponse }) {
   const data = cockpit?.source_mix ?? []
+  const t = useT()
   return (
-    <Panel title="Source Trust Mix" icon={Landmark}>
+    <Panel title={t('source_trust_mix')} icon={Landmark}>
       <div className="grid grid-cols-[150px_minmax(0,1fr)] gap-2 p-3">
         <div className="h-[160px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -725,8 +734,9 @@ function SourceMixPanel({ cockpit }: { cockpit?: IntelCockpitResponse }) {
 
 function PublicPulsePanel({ cockpit }: { cockpit?: IntelCockpitResponse }) {
   const rows = cockpit?.social_pulse ?? []
+  const t = useT()
   return (
-    <Panel title="Public Pulse Sources" icon={Globe2} badge={`pulse ${cockpit?.live_state?.pulse_seq ?? 0}`}>
+    <Panel title={t('public_pulse_sources')} icon={Globe2} badge={`pulse ${cockpit?.live_state?.pulse_seq ?? 0}`}>
       <div className="space-y-2 p-3">
         {rows.map((row) => (
           <div key={row.label} className="rounded-md border border-border-subtle bg-bg-elevated/50 p-2">
@@ -758,6 +768,7 @@ function IndiaIntelMap({ hotspots, links = [], freshnessSec }: {
 }) {
   const [mode, setMode] = useState<'risk' | 'velocity' | 'trust'>('risk')
   const [channel, setChannel] = useState('ALL')
+  const t = useT()
   const project = (lat: number, lng: number) => ({
     x: Math.max(70, Math.min(505, ((lng - 67.2) / 25.2) * 500 + 42)),
     y: Math.max(48, Math.min(370, 386 - ((lat - 7.2) / 28.2) * 326)),
@@ -772,7 +783,7 @@ function IndiaIntelMap({ hotspots, links = [], freshnessSec }: {
   )
   const modeLabel = mode === 'risk' ? 'Risk' : mode === 'velocity' ? 'Velocity' : 'Trust'
   return (
-    <Panel title="India Fraud Signal Map" icon={MapPin} badge={`${visible.length} live hotspots`} className="self-start">
+    <Panel title={t('india_fraud_map')} icon={MapPin} badge={`${visible.length} live hotspots`} className="self-start">
       <div className="border-b border-border-subtle px-3 py-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1.5">
@@ -800,7 +811,7 @@ function IndiaIntelMap({ hotspots, links = [], freshnessSec }: {
       </div>
       <div className="relative overflow-hidden p-3">
         <div className="pointer-events-none absolute left-4 top-4 z-10 rounded-md border border-border-subtle bg-bg-surface/90 px-2 py-1 font-mono text-[8px] text-text-muted">
-          source freshness {ageLabel(freshnessSec)}
+          {t('source_freshness')} {ageLabel(freshnessSec)}
         </div>
         <svg viewBox="0 0 600 420" className="h-[500px] w-full rounded-lg border border-border-subtle bg-[#eef6ff]">
           <defs>
@@ -879,8 +890,9 @@ function IndiaIntelMap({ hotspots, links = [], freshnessSec }: {
 
 function TypologyHeatmap({ cockpit }: { cockpit?: IntelCockpitResponse }) {
   const rows = cockpit?.typology_matrix.slice(0, 7) ?? []
+  const t = useT()
   return (
-    <Panel title="Typology Evidence Matrix" icon={Layers}>
+    <Panel title={t('typology_matrix')} icon={Layers}>
       <div className="space-y-2 p-3">
         {rows.map((row) => {
           const max = Math.max(row.official, row.news, row.social, row.open_web, 1)
@@ -902,8 +914,9 @@ function TypologyHeatmap({ cockpit }: { cockpit?: IntelCockpitResponse }) {
 }
 
 function SignalRadarList({ signals }: { signals: ExternalThreatSignal[] }) {
+  const t = useT()
   return (
-    <Panel title="Signal Evidence Stream" icon={Radio} badge={`${signals.length} signals`} className="h-full min-h-0">
+    <Panel title={t('signal_evidence')} icon={Radio} badge={`${signals.length} signals`} className="h-full min-h-0">
       <div className="max-h-[520px] space-y-2 overflow-auto p-3">
         {signals.map((signal) => (
           <article key={signal.signal_id} className="grid grid-cols-[86px_minmax(0,1fr)] gap-3 rounded-md border border-border-subtle bg-bg-elevated/55 p-2">
@@ -941,12 +954,13 @@ function SignalRadarList({ signals }: { signals: ExternalThreatSignal[] }) {
 }
 
 function SourceLadder({ sources }: { sources: IntelSourceConfig[] }) {
+  const t = useT()
   const grouped = ['tier_0', 'tier_1', 'tier_2', 'tier_3'].map((tier) => ({
     tier,
     sources: sources.filter((source) => source.tier === tier),
   }))
   return (
-    <Panel title="Trusted Source Ladder" icon={ShieldCheck} badge={`${sources.length} sources`}>
+    <Panel title={t('trusted_ladder')} icon={ShieldCheck} badge={`${sources.length} sources`}>
       <div className="max-h-[185px] space-y-2 overflow-auto p-3 pr-2">
         {grouped.map((group) => (
           <div key={group.tier} className="rounded-md border border-border-subtle bg-bg-elevated/45 p-2">
@@ -976,8 +990,9 @@ function SourceLadder({ sources }: { sources: IntelSourceConfig[] }) {
 }
 
 function TrendCards({ trends, playbooks }: { trends: FraudTrendCluster[]; playbooks: AdaptivePlaybook[] }) {
+  const t = useT()
   return (
-    <Panel title="Trend Clusters And Playbooks" icon={BrainCircuit} badge={`${playbooks.length} playbooks`}>
+    <Panel title={t('trend_clusters')} icon={BrainCircuit} badge={`${playbooks.length} playbooks`}>
       <div className="max-h-[250px] space-y-2 overflow-auto p-3 pr-2">
         {trends.slice(0, 4).map((trend) => {
           const playbook = playbooks.find((item) => item.trend_id === trend.trend_id)
@@ -991,9 +1006,9 @@ function TrendCards({ trends, playbooks }: { trends: FraudTrendCluster[]; playbo
                 <ToneBadge label={playbook?.promotion_status ?? 'cluster'} tone={playbook?.promotion_status === 'applied' ? 'emerald' : 'amber'} />
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <Metric label="Velocity" value={pct(trend.velocity_score)} accent="text-cyan-300" />
-                <Metric label="India Fit" value={pct(trend.india_relevance_score)} accent="text-emerald-300" />
-                <Metric label="Trust" value={pct(trend.trust_score)} accent="text-amber-300" />
+                <Metric label={t('velocity')} value={pct(trend.velocity_score)} accent="text-cyan-300" />
+                <Metric label={t('india_fit')} value={pct(trend.india_relevance_score)} accent="text-emerald-300" />
+                <Metric label={t('trust')} value={pct(trend.trust_score)} accent="text-amber-300" />
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {trend.affected_channels.slice(0, 4).map((channel) => (
@@ -1030,8 +1045,9 @@ function FusionGraph({ cockpit }: { cockpit?: IntelCockpitResponse }) {
     }
   })
   const byId = new Map(positioned.map((node) => [node.id, node]))
+  const t = useT()
   return (
-    <Panel title="Source-To-Trend Fusion Graph" icon={Route} className="h-full min-h-0">
+    <Panel title={t('source_to_trend_fusion')} icon={Route} className="h-full min-h-0">
       <div className="h-[520px] p-3">
         <svg viewBox="0 0 760 360" className="h-full w-full rounded-md border border-border-subtle bg-bg-elevated/45">
           <defs>
@@ -1105,8 +1121,9 @@ function DemoConsole({
   onOpenOverview: () => void
   lastCaseId: string | null
 }) {
+  const t = useT()
   return (
-    <Panel title="Judge Demo Console" icon={Crosshair}>
+    <Panel title={t('judge_demo')} icon={Crosshair}>
       <div className="space-y-3 p-3">
         <div className="grid grid-cols-2 gap-2">
           {DEMO_SCENARIOS.map((scenario) => (
@@ -1127,11 +1144,11 @@ function DemoConsole({
         <div className="grid grid-cols-3 gap-2">
           <button onClick={onRefresh} disabled={busy} className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border-default px-3 py-2 text-[9px] font-bold uppercase tracking-[0.12em] text-text-secondary transition-colors hover:border-accent-primary hover:text-accent-primary disabled:cursor-not-allowed disabled:opacity-50">
             <RefreshCw className="h-3.5 w-3.5" />
-            Refresh
+            {t('refresh')}
           </button>
           <button onClick={onDemo} disabled={busy} className="inline-flex items-center justify-center gap-1.5 rounded-md border border-accent-primary/60 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.12em] text-accent-primary transition-colors hover:bg-accent-primary hover:text-bg-deep disabled:cursor-not-allowed disabled:opacity-50">
             <Play className="h-3.5 w-3.5" />
-            Demo
+            {t('demo')}
           </button>
           <button onClick={onOpenOverview} className="inline-flex items-center justify-center gap-1.5 rounded-md border border-emerald-400/40 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.12em] text-emerald-300 transition-colors hover:bg-emerald-400 hover:text-bg-deep">
             <ArrowRight className="h-3.5 w-3.5" />
@@ -1140,7 +1157,7 @@ function DemoConsole({
         </div>
         {lastCaseId && (
           <div className="rounded-md border border-emerald-400/25 bg-emerald-500/10 p-2 text-[9px] text-emerald-300">
-            Preventive signal active before PS3 case {lastCaseId}
+            {t('preventive_signal_active')} {lastCaseId}
           </div>
         )}
       </div>
@@ -1152,6 +1169,7 @@ export function PreFraudIntelPage() {
   const [demoScenario, setDemoScenario] = useState('digital_arrest_mule')
   const [lastCaseId, setLastCaseId] = useState<string | null>(null)
   const [autoRefreshRequested, setAutoRefreshRequested] = useState(false)
+  const t = useT()
   const setActiveTab = useUIStore((s) => s.setActiveTab)
   const setActiveCaseId = useUIStore((s) => s.setActiveCaseId)
   const { data: sourcesData } = useIntelSources()
@@ -1188,17 +1206,17 @@ export function PreFraudIntelPage() {
   }, [autoRefreshRequested, cockpit?.metrics.freshness_sec, previews, refresh])
 
   const heroMetrics = useMemo(() => [
-    { label: 'External Signals', value: String(cockpit?.metrics.signal_count ?? signals.length), accent: 'text-cyan-300' },
-    { label: 'Active Sources', value: String(cockpit?.metrics.active_sources ?? sources.length), accent: 'text-emerald-300' },
-    { label: 'Velocity Index', value: pct(cockpit?.metrics.velocity_index), accent: 'text-accent-primary' },
-    { label: 'Trust Index', value: pct(cockpit?.metrics.trust_index), accent: 'text-amber-300' },
-    { label: 'Corroborated', value: pct(cockpit?.metrics.corroboration_rate), accent: 'text-emerald-300' },
-    { label: 'Map Coverage', value: pct(cockpit?.metrics.map_coverage), accent: 'text-accent-primary' },
-    { label: 'Real Media', value: `${cockpit?.metrics.live_media_items ?? mediaData?.summary.live_media ?? 0}/${cockpit?.metrics.media_items ?? previews.length}`, accent: 'text-rose-300' },
-    { label: 'Videos', value: String(cockpit?.metrics.real_videos ?? mediaData?.summary.real_videos ?? 0), accent: 'text-accent-primary' },
-    { label: 'Media Health', value: pct(cockpit?.metrics.media_health ?? mediaData?.summary.health), accent: 'text-emerald-300' },
-    { label: 'Active Playbooks', value: String(tuningData?.active_playbooks ?? cockpit?.metrics.active_playbooks ?? 0), accent: 'text-violet-300' },
-  ], [cockpit, mediaData?.summary.health, mediaData?.summary.live_media, previews.length, signals.length, sources.length, tuningData?.active_playbooks])
+    { label: t('external_signals'), value: String(cockpit?.metrics.signal_count ?? signals.length), accent: 'text-cyan-300' },
+    { label: t('active_sources'), value: String(cockpit?.metrics.active_sources ?? sources.length), accent: 'text-emerald-300' },
+    { label: t('velocity_index'), value: pct(cockpit?.metrics.velocity_index), accent: 'text-accent-primary' },
+    { label: t('trust_index'), value: pct(cockpit?.metrics.trust_index), accent: 'text-amber-300' },
+    { label: t('corroborated'), value: pct(cockpit?.metrics.corroboration_rate), accent: 'text-emerald-300' },
+    { label: t('map_coverage'), value: pct(cockpit?.metrics.map_coverage), accent: 'text-accent-primary' },
+    { label: t('real_media'), value: `${cockpit?.metrics.live_media_items ?? mediaData?.summary.live_media ?? 0}/${cockpit?.metrics.media_items ?? previews.length}`, accent: 'text-rose-300' },
+    { label: t('videos'), value: String(cockpit?.metrics.real_videos ?? mediaData?.summary.real_videos ?? 0), accent: 'text-accent-primary' },
+    { label: t('media_health'), value: pct(cockpit?.metrics.media_health ?? mediaData?.summary.health), accent: 'text-emerald-300' },
+    { label: t('active_playbooks'), value: String(tuningData?.active_playbooks ?? cockpit?.metrics.active_playbooks ?? 0), accent: 'text-violet-300' },
+  ], [cockpit, mediaData?.summary.health, mediaData?.summary.live_media, previews.length, signals.length, sources.length, t, tuningData?.active_playbooks])
 
   async function runPreventiveDemo() {
     await simulate.mutateAsync(demoScenario)
@@ -1217,20 +1235,20 @@ export function PreFraudIntelPage() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="truncate text-base font-bold tracking-wide text-text-primary">Union Bank Pre-Fraud Intelligence Desk</h1>
-                <ToneBadge label="entry layer" tone="cyan" />
+                <h1 className="truncate text-base font-bold tracking-wide text-text-primary">{t('pre_fraud_desk')}</h1>
+                <ToneBadge label={t('pre_fraud_entry')} tone="cyan" />
               </div>
               <p className="mt-0.5 truncate text-[10px] text-text-muted">
-                OSINT/SOCMINT fusion before fund-flow detection | source media, India signal maps, playbook tuning, Qwen {tuningData?.qwen_model ?? 'qwen3.5:4b-q4_K_M'}
+                {t('pre_fraud_tagline')} | source media, India signal maps, playbook tuning, Qwen {tuningData?.qwen_model ?? 'qwen3.5:4b-q4_K_M'}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <ToneBadge label={`${cockpit?.live_state?.public_mode?.replace(/_/g, ' ') ?? 'live public pulse'}`} tone="emerald" />
-            <ToneBadge label={`fresh ${ageLabel(cockpit?.metrics.freshness_sec)}`} tone="cyan" />
-            <ToneBadge label="rollback ready" tone={tuningData?.rollback_available ? 'emerald' : 'slate'} />
+            <ToneBadge label={`${cockpit?.live_state?.public_mode?.replace(/_/g, ' ') ?? t('live_public_pulse')}`} tone="emerald" />
+            <ToneBadge label={`${t('fresh')} ${ageLabel(cockpit?.metrics.freshness_sec)}`} tone="cyan" />
+            <ToneBadge label={t('rollback_ready')} tone={tuningData?.rollback_available ? 'emerald' : 'slate'} />
             <button onClick={() => setActiveTab('overview')} className="inline-flex h-8 items-center gap-2 rounded-md border border-border-default px-3 text-[9px] font-bold uppercase tracking-[0.12em] text-text-secondary hover:border-accent-primary hover:text-accent-primary">
-              Open Fund-Flow Overview
+              {t('open_fund_flow')}
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -1243,7 +1261,7 @@ export function PreFraudIntelPage() {
       <div className="min-h-0 flex-1 overflow-auto p-4">
         <div className="grid auto-rows-min grid-cols-12 items-start gap-3">
           <div className="col-span-12 2xl:col-span-8">
-            <Panel title="Source Media Intelligence Board" icon={Newspaper} badge={`${previews.length} previews`}>
+            <Panel title={t('source_media_board')} icon={Newspaper} badge={`${previews.length} previews`}>
               <div className="p-3">
                 <MediaCommandDeck previews={previews} />
               </div>
@@ -1291,20 +1309,20 @@ export function PreFraudIntelPage() {
 
           <div className="col-span-12 grid items-start gap-3 lg:grid-cols-3">
             <SourceLadder sources={sources} />
-            <Panel title="Runtime Guardrails" icon={ShieldCheck}>
+            <Panel title={t('runtime_guardrails')} icon={ShieldCheck}>
               <div className="space-y-2 p-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <Metric label="Queue" value={`${tuningData?.bounded_queue.depth ?? 0}/${tuningData?.bounded_queue.max_depth ?? 64}`} />
-                  <Metric label="Shadow" value={String(tuningData?.shadow_changes ?? 0)} />
-                  <Metric label="Advisory" value={String(tuningData?.advisory_changes ?? 0)} />
-                  <Metric label="Rollback" value={tuningData?.rollback_available ? 'available' : 'none'} />
+                  <Metric label={t('queue')} value={`${tuningData?.bounded_queue.depth ?? 0}/${tuningData?.bounded_queue.max_depth ?? 64}`} />
+                  <Metric label={t('shadow')} value={String(tuningData?.shadow_changes ?? 0)} />
+                  <Metric label={t('advisory')} value={String(tuningData?.advisory_changes ?? 0)} />
+                  <Metric label={t('rollback')} value={tuningData?.rollback_available ? 'available' : 'none'} />
                 </div>
                 <div className="rounded-md border border-border-subtle bg-bg-elevated/45 p-2 text-[9px] leading-relaxed text-text-muted">
                   External signals tune watchlists, scenario seeds, and Qwen context only. Graph, ML, rules, ledger, and circuit-breaker evidence remain authoritative.
                 </div>
               </div>
             </Panel>
-            <Panel title="India Sovereignty Fit" icon={Globe2}>
+            <Panel title={t('india_sovereignty')} icon={Globe2}>
               <div className="space-y-2 p-3 text-[9px] leading-relaxed text-text-muted">
                 <div className="rounded-md border border-border-subtle bg-bg-elevated/45 p-2">Official Indian sources outrank public news and social chatter.</div>
                 <div className="rounded-md border border-border-subtle bg-bg-elevated/45 p-2">No customer PII is exported; external feeds only shape preventive context.</div>
