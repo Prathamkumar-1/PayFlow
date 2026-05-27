@@ -1,0 +1,36 @@
+PayFlow Implementation Summary
+
+1. Multi-key Groq / cloud LLM round-robin support
+- Added a dedicated round-robin API key pool for cloud LLM fallback usage.
+- The pool can read up to 30 Claude keys and 30 Groq keys from environment variables.
+- Keys are used in rotation so requests are spread evenly instead of relying on a single API key.
+- If a key is rate-limited, it is cooled down temporarily.
+- If a key returns a server-side error, it is marked degraded for a short period.
+- If a key fails authentication, it is disabled for the session.
+- This makes cloud explainability and fallback inference more reliable when traffic is high.
+
+2. Demo event creator and explainability flow
+- The event lab now exposes a structured explainability response for each demo run.
+- The response includes stage groups, evidence panels, proposal lifecycle data, authority matrix, and runtime counters.
+- This lets the UI show exactly how a demo fraud is handled step by step.
+- The flow is easier to follow because the user can see the path from intel priming to event injection, ML scoring, graph analysis, AI reasoning, analyst approval, and ledger anchoring.
+- The AI is positioned as an explainability assistant, not as the final decision maker.
+
+3. Explainability UI improvements
+- Reworked the demo response panel into a clearer live narrative view.
+- The UI now highlights which layer is active at each stage.
+- It shows the distinction between advisory layers and execution layers.
+- The authority chain makes it clear who can only explain and who can actually approve or execute actions.
+- The panel is meant to reduce confusion during real-time demo fraud handling by showing the reasoning in smaller, readable sections.
+
+4. SHAP / ML explainability panel
+- The model explainability panel now shows global feature importance and per-transaction explanation details.
+- This improves visibility into why a transaction was flagged by ML heuristics.
+- The UI can show top contributing features, risk direction, and a concise explanation narrative.
+- This helps users understand the ML side of the decision, not just the final fraud verdict.
+
+5. Practical result
+- The app can now support a richer demo story where fraud is tackled live and explained clearly.
+- Cloud LLM usage is more robust because multiple Groq keys can be rotated automatically.
+- The explainability UI is less opaque, so investigators and reviewers can understand how the system reached a response.
+- The overall experience is better for demos, walkthroughs, and stakeholder presentations.

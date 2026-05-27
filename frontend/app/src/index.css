@@ -1,0 +1,488 @@
+@import "tailwindcss";
+
+@theme {
+  /* -- Base Layers: Union Bank institutional light shell -- */
+  --color-bg-deep: #eaf4ff;
+  --color-bg-surface: #ffffff;
+  --color-bg-elevated: #edf5ff;
+  --color-bg-overlay: #dcecff;
+
+  /* -- Borders -- */
+  --color-border-subtle: #dbe5f1;
+  --color-border-default: #c6d3e3;
+  --color-border-focus: #0057a8;
+
+  /* -- Text -- */
+  --color-text-primary: #172033;
+  --color-text-secondary: #40516b;
+  --color-text-muted: #718096;
+
+  /* -- Alert Colors: reserved for AI-flagged anomalies -- */
+  --color-alert-critical: #d71920;
+  --color-alert-high: #f97316;
+  --color-alert-medium: #f5b400;
+  --color-alert-low: #0f9f6e;
+  --color-alert-escalated: #7c3aed;
+
+  /* -- Accent: Union Bank blue, with red reserved for priority action -- */
+  --color-accent-primary: #0057a8;
+  --color-accent-hover: #004b93;
+  --color-accent-muted: #dbeafe;
+
+  /* -- Typography -- */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* -- Radius -- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+}
+
+/* -- Global Resets -- */
+:root {
+  color-scheme: light;
+  --ubi-red: #d71920;
+  --ubi-red-dark: #ad1018;
+  --ubi-blue: #0057a8;
+  --ubi-blue-dark: #003f7e;
+  --ubi-blue-soft: #e7f0fb;
+  --ubi-ink: #172033;
+  --ubi-line: #c6d3e3;
+  --ubi-shadow: 0 14px 38px rgba(23, 32, 51, 0.1);
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+  background: var(--color-bg-deep);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* -- Custom Scrollbar -- */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #b9c8db;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8ea4bf;
+}
+
+/* -- Selection -- */
+::selection {
+  background: rgba(0, 87, 168, 0.18);
+  color: var(--color-text-primary);
+}
+
+/* ── Keyframe Animations ── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes data-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 87, 168, 0); }
+  50% { box-shadow: 0 0 8px 2px rgba(0, 87, 168, 0.16); }
+}
+@keyframes border-flow {
+  0% { border-color: var(--color-border-default); }
+  50% { border-color: var(--ubi-blue); }
+  100% { border-color: var(--color-border-default); }
+}
+
+/* ── Utility Classes ── */
+.animate-fade-in { animation: fade-in 0.3s ease-out both; }
+.animate-slide-in-right { animation: slide-in-right 0.25s ease-out both; }
+.animate-slide-up { animation: slide-up 0.3s ease-out both; }
+.animate-data-pulse { animation: data-pulse 2s ease-in-out infinite; }
+.animate-border-flow { animation: border-flow 3s ease-in-out infinite; }
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(0, 87, 168, 0.12) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ── Card hover lift ── */
+.card-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--ubi-shadow);
+  border-color: #9fb5d0;
+}
+
+/* -- Gradient text -- */
+.text-gradient-brand {
+  background: linear-gradient(135deg, var(--ubi-red), var(--ubi-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* -- Subtle background pattern for graph area -- */
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(rgba(0, 87, 168, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 87, 168, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* -- Top bar accent gradient line: Union Bank red + blue -- */
+.top-accent-line {
+  background: linear-gradient(90deg,
+    var(--ubi-red) 0%,
+    var(--ubi-red) 42%,
+    #ffffff 42%,
+    #ffffff 47%,
+    var(--ubi-blue) 47%,
+    var(--ubi-blue) 100%
+  );
+}
+
+/* ── Tabular nums ── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Graph Control Buttons ── */
+.graph-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.graph-control-btn:hover {
+  background: var(--ubi-blue-soft);
+  color: var(--ubi-blue);
+  border-color: #9fb5d0;
+}
+
+.graph-control-select {
+  appearance: none;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 4px 8px 4px 20px;
+  height: 28px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.graph-control-select:hover {
+  background: var(--ubi-blue-soft);
+  border-color: #9fb5d0;
+}
+.graph-control-select option {
+  background: #ffffff;
+  color: var(--color-text-primary);
+}
+
+/* ── Fraud Node Glow Effects ── */
+@keyframes fraud-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--glow-color, #ef4444)); opacity: 0.85; }
+  50% { filter: drop-shadow(0 0 14px var(--glow-color, #ef4444)); opacity: 1; }
+}
+@keyframes hub-beacon {
+  0%, 100% { box-shadow: 0 0 6px 2px rgba(245,158,11,0.25); }
+  50% { box-shadow: 0 0 18px 6px rgba(245,158,11,0.45); }
+}
+.glow-fraud { animation: fraud-glow 2.5s ease-in-out infinite; }
+.glow-hub { animation: hub-beacon 1.8s ease-in-out infinite; }
+
+/* ── Filter Active Indicator ── */
+@keyframes filter-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.filter-active-indicator {
+  animation: filter-pulse 2s ease-in-out infinite;
+}
+
+/* ── Detail Panel Slide ── */
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in-up { animation: slide-in-up 0.3s ease-out both; }
+
+/* ── Radar Ping Animation (new node arrival) ── */
+@keyframes radar-ping {
+  0% { box-shadow: 0 0 0 0 rgba(215, 25, 32, 0.45); }
+  70% { box-shadow: 0 0 0 10px rgba(215, 25, 32, 0); }
+  100% { box-shadow: 0 0 0 10px rgba(215, 25, 32, 0); }
+}
+.animate-radar-ping {
+  animation: radar-ping 1.5s ease-out infinite;
+}
+
+/* ── Pipeline Stage Bar ── */
+@keyframes stage-fill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+.animate-stage-fill {
+  animation: stage-fill 0.4s ease-out both;
+}
+
+/* -- Union Bank institutional shell helpers -- */
+.ubi-app-shell {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f4f9ff 44%, #eef6ff 100%);
+}
+
+.ubi-main-surface {
+  background:
+    linear-gradient(180deg, #f7fbff 0%, #eef6ff 100%);
+}
+
+.ubi-main-surface > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ubi-brand-mark {
+  position: relative;
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 87, 168, 0.28);
+  box-shadow: 0 6px 18px rgba(0, 87, 168, 0.14);
+  overflow: hidden;
+}
+
+.ubi-brand-mark::before,
+.ubi-brand-mark::after {
+  content: "";
+  position: absolute;
+  width: 13px;
+  height: 20px;
+  top: 7px;
+  border-radius: 0 0 8px 8px;
+  border-bottom: 4px solid currentColor;
+  border-left: 4px solid currentColor;
+  border-right: 4px solid currentColor;
+  border-top: 0;
+}
+
+.ubi-brand-mark::before {
+  left: 7px;
+  color: var(--ubi-red);
+}
+
+.ubi-brand-mark::after {
+  right: 7px;
+  color: var(--ubi-blue);
+  transform: scaleX(-1);
+}
+
+.ubi-official-header {
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(19, 46, 82, 0.12);
+}
+
+.ubi-access-strip {
+  height: 28px;
+  background: #ffffff;
+  border-bottom: 1px solid #d9e2ef;
+  color: #24364f;
+}
+
+.ubi-wordmark-title {
+  letter-spacing: 0;
+  font-weight: 800;
+  color: var(--ubi-red);
+}
+
+.ubi-wordmark-title span {
+  color: var(--ubi-blue);
+}
+
+.ubi-pill-menu {
+  background: var(--ubi-blue);
+  color: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 7px 18px rgba(0, 91, 172, 0.2);
+}
+
+.ubi-page-band {
+  background: linear-gradient(180deg, #ffffff 0%, #eef6ff 100%);
+  border-color: rgba(0, 87, 168, 0.18);
+}
+
+.ubi-red-blue-rule {
+  background: linear-gradient(90deg, var(--ubi-red), var(--ubi-blue));
+}
+
+.ubi-service-strip {
+  background: var(--ubi-blue);
+  color: #ffffff;
+  border-radius: 0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+.ubi-institution-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%);
+  border: 1px solid rgba(0, 87, 168, 0.18);
+  box-shadow: 0 8px 22px rgba(23, 32, 51, 0.08);
+}
+
+.ubi-action-rail {
+  background: #ffffff;
+  border: 2px solid var(--ubi-blue);
+  color: var(--ubi-blue);
+  font-weight: 800;
+}
+
+.ubi-main-surface section.rounded-lg,
+.ubi-main-surface section.rounded-md,
+.ubi-main-surface article.rounded-lg,
+.ubi-main-surface article.rounded-md {
+  box-shadow: 0 8px 22px rgba(23, 32, 51, 0.07);
+}
+
+.ubi-main-surface section[class*="bg-bg-surface"],
+.ubi-main-surface article[class*="bg-bg-surface"] {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f9ff 100%) !important;
+}
+
+.ubi-main-surface [class*="bg-bg-elevated"] {
+  background-color: rgba(237, 245, 255, 0.88) !important;
+}
+
+.ubi-analytics-page [class*="text-white"] {
+  color: var(--color-text-primary) !important;
+}
+
+.ubi-analytics-page [class*="from-slate-"],
+.ubi-analytics-page [class*="via-slate-"],
+.ubi-analytics-page [class*="to-slate-"] {
+  background-image: none !important;
+}
+
+/* -- Prototype-wide light harmonizer for older SOC-dark utility classes -- */
+[class*="bg-slate-950"],
+[class*="bg-slate-900"],
+[class*="bg-slate-800"],
+[class*="bg-gray-950"],
+[class*="bg-gray-900"] {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+}
+
+[class*="border-slate-800"],
+[class*="border-slate-700"],
+[class*="border-slate-600"],
+[class*="border-gray-800"],
+[class*="border-gray-700"] {
+  border-color: var(--color-border-subtle) !important;
+}
+
+[class*="text-slate-200"],
+[class*="text-slate-300"],
+[class*="text-slate-400"],
+[class*="text-gray-200"],
+[class*="text-gray-300"],
+[class*="text-gray-400"] {
+  color: var(--color-text-secondary) !important;
+}
+
+[class*="text-slate-500"],
+[class*="text-slate-600"],
+[class*="text-gray-500"],
+[class*="text-gray-600"] {
+  color: var(--color-text-muted) !important;
+}
+
+[class*="text-cyan-"],
+[class*="text-sky-"],
+[class*="text-blue-"] {
+  color: var(--ubi-blue) !important;
+}
+
+[class*="border-cyan-"],
+[class*="border-sky-"],
+[class*="border-blue-"] {
+  border-color: rgba(0, 87, 168, 0.28) !important;
+}
+
+[class*="bg-cyan-"],
+[class*="bg-sky-"],
+[class*="bg-blue-"] {
+  background-color: rgba(0, 87, 168, 0.1) !important;
+}
+
+[class*="shadow-accent-primary"] {
+  box-shadow: 0 8px 18px rgba(0, 87, 168, 0.18) !important;
+}
+
+@keyframes radar-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Pipeline Motion Visualizer ── */
+@keyframes pipeline-flow {
+  0%   { left: -4px; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { left: calc(100% + 4px); opacity: 0; }
+}
+@keyframes pipeline-icon-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.15); }
+}
+@keyframes pipeline-dot-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50%      { opacity: 1; transform: scale(1.3); }
+}
+@keyframes pipeline-stage-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes pipeline-particle-drift {
+  0%, 100% { transform: translateX(0) translateY(-50%); opacity: 0.4; }
+  50%      { transform: translateX(12px) translateY(-50%); opacity: 1; }
+}

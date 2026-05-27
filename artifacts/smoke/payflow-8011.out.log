@@ -1,0 +1,270 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║   ██████╗  █████╗ ██╗   ██╗███████╗██╗      ██████╗ ██╗    ║
+║   ██╔══██╗██╔══██╗╚██╗ ██╔╝██╔════╝██║     ██╔═══██╗██║    ║
+║   ██████╔╝███████║ ╚████╔╝ █████╗  ██║     ██║   ██║██║ █╗ ║
+║   ██╔═══╝ ██╔══██║  ╚██╔╝  ██╔══╝  ██║     ██║   ██║██║███╗║
+║   ██║     ██║  ██║   ██║   ██║     ███████╗╚██████╔╝╚███╔██║
+║   ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚══════╝ ╚═════╝  ╚══╝╚╝║
+║                                                              ║
+║   Real-Time Fraud Intelligence for Union Bank of India       ║
+║   ML · GNN · Blockchain · LLM Agents · ZKP Privacy          ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+02:53:41 │ INFO    │ payflow.main                 │ Configuration: accounts=2000, events=5000, fraud=8%, cpu_only=False, skip_llm=False
+02:53:41 │ INFO    │ payflow.main                 │ ============================================================
+02:53:41 │ INFO    │ payflow.main                 │ PayFlow Orchestrator — Initializing
+02:53:41 │ INFO    │ payflow.main                 │ ============================================================
+02:53:41 │ INFO    │ payflow.main                 │ Directories verified: data/, artifacts/, logs/
+02:53:42 │ INFO    │ src.blockchain.storage       │ Ledger storage opened: C:\Users\sayan\Downloads\Aryabhata\Pay_Flow\data\ledger2.db
+02:53:42 │ INFO    │ src.blockchain.crypto        │ Ed25519 signing key loaded from C:\Users\sayan\Downloads\Aryabhata\Pay_Flow\artifacts\ledger\signing_key.bin
+02:53:42 │ INFO    │ src.blockchain.ledger        │ Audit ledger opened: head_index=29104, head_hash=87d1b471...202cc2ec
+02:53:42 │ INFO    │ payflow.main                 │ AuditLedger opened (chain head: 29105)
+02:53:42 │ INFO    │ payflow.main                 │ CircuitBreaker initialized (consensus threshold: 0.80)
+02:53:42 │ INFO    │ src.cfr.registry             │ Central Fraud Registry initialized
+02:53:42 │ INFO    │ src.ml.investigation         │ InvestigationManager initialized
+02:53:42 │ INFO    │ payflow.main                 │ FraudEnsemble combiner ready (weights: 0.5/0.3/0.2)
+02:53:42 │ INFO    │ payflow.main                 │ RuleEngine (16 rules) + PreApprovalGate + CFR wired into pipeline
+02:53:42 │ INFO    │ payflow.main                 │ GNNScorer + LoadShedder proxy ready (device: cpu)
+02:53:42 │ INFO    │ payflow.main                 │ TransactionGraph initialized
+02:53:42 │ INFO    │ payflow.main                 │ FeatureEngine ready (36-dim feature vector)
+02:53:42 │ INFO    │ payflow.main                 │ FraudClassifier ready (device: cuda)
+02:53:42 │ INFO    │ payflow.main                 │ DynamicThreshold ready (initial: 0.85)
+02:53:42 │ INFO    │ payflow.main                 │ Anomaly detectors initialized (IsolationForest + Autoencoder)
+02:53:42 │ INFO    │ payflow.main                 │ SHAPExplainer + ModelDriftDetector ready
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium: Bank UBI (Union Bank of India) registered
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium: Bank SBI (State Bank of India) registered
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium: Bank BOB (Bank of Baroda) registered
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium: Bank PNB (Punjab National Bank) registered
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium: Bank CANARA (Canara Bank) registered
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium: Bank IOB (Indian Overseas Bank) registered
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium alert published: 894dda5323a3 from CANARA [CIRCULAR_LAUNDERING]
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium alert published: 6250ca3636bc from CANARA [MULE_NETWORK]
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium alert published: 5a8da3f76464 from CANARA [MULE_NETWORK]
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium alert published: fd0e1a25efcf from BOB [ACCOUNT_TAKEOVER]
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium alert published: d4f9cdf14a84 from SBI [ACCOUNT_TAKEOVER]
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium alert published: d3970f7f4e8c from IOB [ACCOUNT_TAKEOVER]
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium alert published: 0833a6185d69 from SBI [CIRCULAR_LAUNDERING]
+02:53:42 │ INFO    │ src.blockchain.consortium    │ Consortium alert published: e182710dea10 from PNB [CIRCULAR_LAUNDERING]
+02:53:42 │ INFO    │ payflow.main                 │ ConsortiumHub initialized (6 member banks, 8 peer alerts)
+02:53:44 │ INFO    │ payflow.main                 │ LLM stack initialized (InvestigatorAgent + NLU sub-agent)
+02:53:44 │ INFO    │ payflow.main                 │ NLQueryEngine ready (LLM=True)
+02:53:44 │ INFO    │ payflow.main                 │ CircuitBreaker wired (graph=True, llm=True)
+02:53:44 │ INFO    │ src.ml.models.alert_router   │ Graph consumer registered.
+02:53:44 │ INFO    │ src.ml.models.alert_router   │ Ledger consumer registered.
+02:53:44 │ INFO    │ src.ml.models.alert_router   │ Circuit breaker consumer registered.
+02:53:44 │ INFO    │ src.ml.models.alert_router   │ Agent consumer registered.
+02:53:44 │ INFO    │ payflow.main                 │ AlertRouter wired (4 consumer groups)
+02:53:44 │ INFO    │ payflow.main                 │ IngestionPipeline ready (batch_size=512, 3 consumers)
+02:53:44 │ INFO    │ payflow.main                 │ Synthetic world built (2000 accounts, 160 dormant)
+02:53:44 │ INFO    │ payflow.main                 │ ThreatSimulationEngine ready (4 attack types)
+02:53:44 │ INFO    │ payflow.main                 │ HardwareProfiler started (1.0s interval, shed at 7500 MB, resume at 6500 MB)
+02:53:44 │ INFO    │ payflow.main                 │ GPUPriorityQueue initialized (cooperative VRAM sharing)
+02:53:45 │ INFO    │ src.api.app                  │ Pre-fraud intelligence baseline seeded for judge demo
+02:53:45 │ INFO    │ src.api.app                  │ Frontend SPA build mounted from C:\Users\sayan\Downloads\Aryabhata\Pay_Flow\frontend\app\dist
+02:53:45 │ INFO    │ payflow.main                 │ Dashboard server started on http://127.0.0.1:8011
+02:53:45 │ INFO    │ payflow.main                 │ ============================================================
+02:53:45 │ INFO    │ payflow.main                 │ Initialization complete — all modules online
+02:53:45 │ INFO    │ payflow.main                 │ ============================================================
+02:53:45 │ INFO    │ payflow.main                 │ Pipeline execution starting (5000 events, 8% fraud)
+02:53:45 │ INFO    │ payflow.main                 │ ─── Phase A: Data Ingestion ───
+02:53:45 │ INFO    │ src.api.app                  │ Dashboard server starting — templates: C:\Users\sayan\Downloads\Aryabhata\Pay_Flow\frontend\templates
+02:53:45 │ INFO    │ src.ingestion.stream_processor │ Pipeline started: batch_size=512, timeout=1.0s, consumers=3
+02:53:45 │ INFO    │ payflow.main                 │ Captured ingested_count = 6543 before pipeline restart
+02:53:47 │ INFO    │ src.ingestion.stream_processor │ Pipeline stopped. Final metrics: {'ingested': 6543, 'validated': 6543, 'rejected': 0, 'dispatched': 6543, 'batches': 13, 'throughput_eps': 3079.1, 'uptime_sec': 2.1}
+02:53:47 │ INFO    │ src.ingestion.stream_processor │ Pipeline started: batch_size=512, timeout=1.0s, consumers=3
+02:53:47 │ INFO    │ payflow.main                 │ Ingestion done: 6543 events -> 13 batches -> 5043 feature rows, graph has 1968 nodes / 5043 edges
+02:53:47 │ INFO    │ payflow.main                 │ ─── Phase B: Model Training ───
+02:53:47 │ INFO    │ config.vram_manager          │ GPU mode: ANALYSIS
+02:53:47 │ INFO    │ payflow.main                 │ Training XGBoost on 4034 samples (1009 eval)...
+02:53:52 │ INFO    │ src.ml.models.xgboost_classifier │ XGBoost trained on 'cuda' in 3109.2 ms (30 trees)
+02:53:52 │ INFO    │ src.ml.models.xgboost_classifier │ Training complete: {'n_train': 4034, 'n_eval': 1009, 'n_estimators_used': 30, 'best_iteration': 29, 'best_aucpr': 0.9804, 'scale_pos_weight': 1.78, 'device': 'cuda', 'training_ms': 0.0, 'cpu_fallback': False}
+02:53:52 │ INFO    │ payflow.main                 │ XGBoost trained in 4.8s — AUCPR: 0.9804, best_iter: 29, device: cuda
+02:53:52 │ INFO    │ src.ml.models.xgboost_classifier │ Validation: {'aucpr': 0.9804, 'auc_roc': 0.9878, 'f1': 0.9156, 'precision': 0.8966, 'recall': 0.9353, 'eval_samples': 1009}
+02:53:52 │ INFO    │ payflow.main                 │ Validation — AUCPR: 0.9804, ROC-AUC: 0.9878, F1: 0.9156, Precision: 0.8966, Recall: 0.9353
+02:53:54 │ INFO    │ config.vram_manager          │ GPU mode: IDLE (analysis finished)
+02:53:55 │ INFO    │ src.ml.isolation_detector    │ IsolationDetector fitted on 5043 samples (36 features) in 219.0 ms
+02:53:55 │ INFO    │ payflow.main                 │ IsolationForest fitted on 5043 samples in 0.4s
+02:54:00 │ INFO    │ src.ml.autoencoder_detector  │ AutoencoderDetector fitted on 3220 samples (D=36), final_loss=0.019856, threshold=0.068331, 5078.0 ms
+02:54:00 │ INFO    │ payflow.main                 │ Autoencoder fitted on 0 legitimate samples in 5.1s (threshold: 0.000000)
+02:54:01 │ INFO    │ src.ml.models.random_forest_classifier │ RandomForest training complete: {'n_train': 4034, 'n_eval': 1009, 'n_estimators': 300, 'best_aucpr': 0.9784, 'class_weight': 'balanced', 'training_ms': 820.7, 'oob_score': 0.9316}
+02:54:01 │ INFO    │ payflow.main                 │ RandomForest fitted on 4034 samples in 0.9s — AUCPR: 0.9784, OOB: 0.9316
+02:54:01 │ INFO    │ src.ml.models.logistic_classifier │ LogisticRegression fitted: 4034 samples, AUCPR=0.7203, converged=True
+02:54:01 │ INFO    │ payflow.main                 │ LogisticRegression fitted on 4034 samples in 0.0s — AUCPR: 0.7203, converged: True
+02:54:01 │ INFO    │ src.ml.explainability        │ shap package not installed — using fallback gain-based importance
+02:54:01 │ INFO    │ payflow.main                 │ SHAPExplainer attached to trained XGBoost model
+02:54:01 │ INFO    │ src.ml.drift_detector        │ Drift detector: reference set (5043 scores, mean=0.1982, std=0.1153)
+02:54:01 │ INFO    │ payflow.main                 │ DriftDetector reference distribution set (5043 samples)
+02:54:01 │ INFO    │ payflow.main                 │ ─── Phase C: Inference + Alert Routing ───
+02:54:01 │ INFO    │ config.vram_manager          │ GPU mode: ANALYSIS
+02:54:01 │ INFO    │ payflow.main                 │ Running inference on 5043 transactions...
+02:54:01 │ INFO    │ payflow.main                 │ Inference complete in 24.4ms — 1910 flagged (>0.5)
+02:54:01 │ INFO    │ config.vram_manager          │ GPU mode: IDLE (analysis finished)
+02:54:01 │ INFO    │ payflow.main                 │ RuleEngine: evaluated 500 flagged transactions (16 rules × 500 txns)
+02:54:01 │ INFO    │ payflow.main                 │ 1830 alerts generated: 1364 HIGH, 466 MEDIUM (from 5043 threshold results)
+02:54:01 │ INFO    │ src.ml.models.alert_router   │ Agent investigation budget reached (2). Further HIGH alerts remain routed to graph, ledger, and circuit breaker.
+02:54:01 │ WARNING │ src.graph.builder            │ Investigation TXN-3f27eb1882af: 1 mule patterns, 0 cycles, 0 intermediaries in 163-node subgraph (11.4 ms)
+02:54:01 │ WARNING │ src.graph.builder            │ Investigation TXN-61274b29d88b: 1 mule patterns, 0 cycles, 0 intermediaries in 162-node subgraph (8.1 ms)
+02:54:01 │ WARNING │ src.graph.builder            │ Investigation TXN-9cfbb62b3c1b: 1 mule patterns, 0 cycles, 0 intermediaries in 207-node subgraph (10.4 ms)
+02:54:01 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 100, 'alerts': 42, 'investigations': 42, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 1, 'avg_anchor_ms': 1.464, 'verifications': 0, 'uptime_sec': 19.7}
+02:54:01 │ WARNING │ src.graph.builder            │ Investigation TXN-d84806a43bd5: 1 mule patterns, 0 cycles, 0 intermediaries in 146-node subgraph (8.0 ms)
+02:54:02 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 200, 'alerts': 92, 'investigations': 92, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 2, 'avg_anchor_ms': 0.963, 'verifications': 0, 'uptime_sec': 20.2}
+02:54:02 │ WARNING │ src.graph.builder            │ Investigation TXN-0353170a4292: 1 mule patterns, 0 cycles, 0 intermediaries in 273-node subgraph (16.4 ms)
+02:54:02 │ WARNING │ src.graph.builder            │ Investigation TXN-e9ace701d10b: 1 mule patterns, 0 cycles, 0 intermediaries in 284-node subgraph (18.4 ms)
+02:54:02 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 300, 'alerts': 142, 'investigations': 142, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 3, 'avg_anchor_ms': 0.869, 'verifications': 0, 'uptime_sec': 20.8}
+02:54:03 │ WARNING │ src.graph.builder            │ Investigation TXN-c6043049a230: 1 mule patterns, 0 cycles, 0 intermediaries in 257-node subgraph (12.7 ms)
+02:54:03 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 400, 'alerts': 192, 'investigations': 192, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 4, 'avg_anchor_ms': 0.77, 'verifications': 0, 'uptime_sec': 21.2}
+02:54:03 │ WARNING │ src.graph.builder            │ Investigation TXN-910c28e1b3f6: 1 mule patterns, 0 cycles, 0 intermediaries in 364-node subgraph (20.3 ms)
+02:54:03 │ INFO    │ httpx                        │ HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+02:54:03 │ INFO    │ config.vram_manager          │ GPU mode: ASSISTANT
+02:54:03 │ INFO    │ httpx                        │ HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+02:54:03 │ INFO    │ config.vram_manager          │ GPU mode: ASSISTANT
+02:54:03 │ WARNING │ src.graph.builder            │ Investigation TXN-0df2c266088b: 1 mule patterns, 0 cycles, 0 intermediaries in 399-node subgraph (24.4 ms)
+02:54:03 │ WARNING │ src.graph.builder            │ Investigation TXN-f6ff3e4e21d9: 1 mule patterns, 0 cycles, 0 intermediaries in 267-node subgraph (13.0 ms)
+02:54:03 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 500, 'alerts': 242, 'investigations': 242, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 5, 'avg_anchor_ms': 0.743, 'verifications': 0, 'uptime_sec': 21.8}
+02:54:03 │ WARNING │ src.graph.builder            │ Investigation TXN-ea502403c341: 1 mule patterns, 0 cycles, 0 intermediaries in 228-node subgraph (11.0 ms)
+02:54:03 │ WARNING │ src.graph.builder            │ Investigation TXN-bde6d1c85c5a: 1 mule patterns, 0 cycles, 0 intermediaries in 234-node subgraph (11.4 ms)
+02:54:04 │ WARNING │ src.graph.builder            │ Investigation TXN-2f70f079e52e: 1 mule patterns, 0 cycles, 0 intermediaries in 269-node subgraph (13.5 ms)
+02:54:04 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 600, 'alerts': 292, 'investigations': 292, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 6, 'avg_anchor_ms': 0.727, 'verifications': 0, 'uptime_sec': 22.3}
+02:54:04 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 700, 'alerts': 342, 'investigations': 342, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 7, 'avg_anchor_ms': 0.688, 'verifications': 0, 'uptime_sec': 23.0}
+02:54:05 │ WARNING │ src.graph.builder            │ Investigation TXN-56c31640e36f: 1 mule patterns, 0 cycles, 0 intermediaries in 171-node subgraph (8.2 ms)
+02:54:05 │ WARNING │ src.graph.builder            │ Investigation TXN-b9a88c26b0f1: 2 mule patterns, 0 cycles, 0 intermediaries in 258-node subgraph (17.4 ms)
+02:54:05 │ WARNING │ src.graph.builder            │ Investigation TXN-fe2b63f7b539: 1 mule patterns, 0 cycles, 0 intermediaries in 461-node subgraph (29.5 ms)
+02:54:05 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 800, 'alerts': 392, 'investigations': 392, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 8, 'avg_anchor_ms': 0.679, 'verifications': 0, 'uptime_sec': 23.5}
+02:54:05 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 900, 'alerts': 442, 'investigations': 442, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 9, 'avg_anchor_ms': 0.678, 'verifications': 0, 'uptime_sec': 24.0}
+02:54:06 │ WARNING │ src.graph.builder            │ Investigation TXN-a23ac0670964: 1 mule patterns, 0 cycles, 0 intermediaries in 123-node subgraph (7.2 ms)
+02:54:06 │ WARNING │ src.graph.builder            │ Investigation TXN-2f040376bcd0: 1 mule patterns, 0 cycles, 0 intermediaries in 190-node subgraph (9.8 ms)
+02:54:06 │ WARNING │ src.graph.builder            │ Investigation TXN-b5f3dfb3ac48: 1 mule patterns, 0 cycles, 0 intermediaries in 381-node subgraph (26.1 ms)
+02:54:06 │ WARNING │ src.graph.builder            │ Investigation TXN-65a8a8f97b91: 1 mule patterns, 0 cycles, 0 intermediaries in 238-node subgraph (11.5 ms)
+02:54:06 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1000, 'alerts': 492, 'investigations': 492, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 10, 'avg_anchor_ms': 0.656, 'verifications': 0, 'uptime_sec': 24.5}
+02:54:06 │ WARNING │ src.graph.builder            │ Investigation TXN-81da1bd9ff3a: 1 mule patterns, 0 cycles, 0 intermediaries in 347-node subgraph (20.5 ms)
+02:54:06 │ WARNING │ src.graph.builder            │ Investigation TXN-39d1f1ce574b: 1 mule patterns, 0 cycles, 0 intermediaries in 153-node subgraph (7.8 ms)
+02:54:07 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1100, 'alerts': 542, 'investigations': 542, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 11, 'avg_anchor_ms': 0.648, 'verifications': 0, 'uptime_sec': 25.0}
+02:54:07 │ WARNING │ src.graph.builder            │ Investigation TXN-a5cc2856e484: 1 mule patterns, 0 cycles, 0 intermediaries in 280-node subgraph (14.5 ms)
+02:54:07 │ WARNING │ src.graph.builder            │ Investigation TXN-5686ef1386f5: 1 mule patterns, 0 cycles, 0 intermediaries in 235-node subgraph (11.8 ms)
+02:54:07 │ WARNING │ src.graph.builder            │ Investigation TXN-50412d677958: 1 mule patterns, 0 cycles, 0 intermediaries in 161-node subgraph (8.7 ms)
+02:54:07 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1200, 'alerts': 592, 'investigations': 592, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 12, 'avg_anchor_ms': 0.647, 'verifications': 0, 'uptime_sec': 25.5}
+02:54:07 │ WARNING │ src.graph.builder            │ Investigation TXN-36d372558369: 1 mule patterns, 0 cycles, 0 intermediaries in 112-node subgraph (5.6 ms)
+02:54:07 │ WARNING │ src.graph.builder            │ Investigation TXN-d8c1679433d1: 1 mule patterns, 0 cycles, 0 intermediaries in 391-node subgraph (23.4 ms)
+02:54:08 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1300, 'alerts': 642, 'investigations': 642, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 13, 'avg_anchor_ms': 0.633, 'verifications': 0, 'uptime_sec': 26.1}
+02:54:08 │ WARNING │ src.graph.builder            │ Investigation TXN-bed21becbdfe: 1 mule patterns, 0 cycles, 0 intermediaries in 485-node subgraph (27.6 ms)
+02:54:08 │ WARNING │ src.graph.builder            │ Investigation TXN-ee86e4ecc9b7: 1 mule patterns, 0 cycles, 0 intermediaries in 155-node subgraph (9.1 ms)
+02:54:08 │ WARNING │ src.graph.builder            │ Investigation TXN-41952fe6b8df: 1 mule patterns, 0 cycles, 0 intermediaries in 156-node subgraph (8.9 ms)
+02:54:08 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1400, 'alerts': 692, 'investigations': 692, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 14, 'avg_anchor_ms': 0.631, 'verifications': 0, 'uptime_sec': 26.6}
+02:54:08 │ WARNING │ src.graph.builder            │ Investigation TXN-cb674197a6b7: 1 mule patterns, 0 cycles, 0 intermediaries in 336-node subgraph (18.4 ms)
+02:54:08 │ WARNING │ src.graph.builder            │ Investigation TXN-5d0c095cf495: 1 mule patterns, 0 cycles, 0 intermediaries in 263-node subgraph (14.3 ms)
+02:54:09 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1500, 'alerts': 742, 'investigations': 742, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 15, 'avg_anchor_ms': 0.627, 'verifications': 0, 'uptime_sec': 27.1}
+02:54:09 │ WARNING │ src.graph.builder            │ Investigation TXN-e86509009d02: 1 mule patterns, 0 cycles, 0 intermediaries in 379-node subgraph (23.4 ms)
+02:54:09 │ WARNING │ src.graph.builder            │ Investigation TXN-cce25ec41f65: 1 mule patterns, 0 cycles, 0 intermediaries in 219-node subgraph (12.3 ms)
+02:54:09 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1600, 'alerts': 792, 'investigations': 792, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 16, 'avg_anchor_ms': 0.62, 'verifications': 0, 'uptime_sec': 27.6}
+02:54:10 │ WARNING │ src.graph.builder            │ Investigation TXN-0791ff6d78b0: 1 mule patterns, 0 cycles, 0 intermediaries in 175-node subgraph (9.5 ms)
+02:54:10 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1700, 'alerts': 842, 'investigations': 842, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 17, 'avg_anchor_ms': 0.619, 'verifications': 0, 'uptime_sec': 28.3}
+02:54:10 │ WARNING │ src.graph.builder            │ Investigation TXN-ad2dfa944d45: 1 mule patterns, 0 cycles, 0 intermediaries in 177-node subgraph (9.1 ms)
+02:54:10 │ WARNING │ src.graph.builder            │ Investigation TXN-cafe42792b1a: 1 mule patterns, 0 cycles, 0 intermediaries in 315-node subgraph (15.6 ms)
+02:54:10 │ WARNING │ src.graph.builder            │ Investigation TXN-222648ca986c: 1 mule patterns, 0 cycles, 0 intermediaries in 376-node subgraph (20.8 ms)
+02:54:10 │ WARNING │ src.graph.builder            │ Investigation TXN-74e0a1161f9e: 1 mule patterns, 0 cycles, 0 intermediaries in 196-node subgraph (10.2 ms)
+02:54:10 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1800, 'alerts': 892, 'investigations': 892, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 18, 'avg_anchor_ms': 0.617, 'verifications': 0, 'uptime_sec': 28.8}
+02:54:10 │ WARNING │ src.graph.builder            │ Investigation TXN-a407ed6f1be9: 1 mule patterns, 0 cycles, 0 intermediaries in 229-node subgraph (12.2 ms)
+02:54:11 │ WARNING │ src.graph.builder            │ Investigation TXN-5af232b17436: 1 mule patterns, 0 cycles, 0 intermediaries in 104-node subgraph (6.1 ms)
+02:54:11 │ WARNING │ src.graph.builder            │ Investigation TXN-31fd15b5e2da: 1 mule patterns, 0 cycles, 0 intermediaries in 237-node subgraph (14.1 ms)
+02:54:11 │ WARNING │ src.graph.builder            │ Investigation TXN-eedaeb33941f: 1 mule patterns, 0 cycles, 0 intermediaries in 181-node subgraph (8.7 ms)
+02:54:11 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 1900, 'alerts': 942, 'investigations': 942, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 19, 'avg_anchor_ms': 0.61, 'verifications': 0, 'uptime_sec': 29.3}
+02:54:11 │ WARNING │ src.graph.builder            │ Investigation TXN-d57b9eb17388: 1 mule patterns, 0 cycles, 0 intermediaries in 54-node subgraph (2.8 ms)
+02:54:11 │ WARNING │ src.graph.builder            │ Investigation TXN-a01a4051517c: 1 mule patterns, 0 cycles, 0 intermediaries in 369-node subgraph (20.6 ms)
+02:54:11 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2000, 'alerts': 992, 'investigations': 992, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 20, 'avg_anchor_ms': 0.608, 'verifications': 0, 'uptime_sec': 29.8}
+02:54:11 │ WARNING │ src.graph.builder            │ Investigation TXN-1d560f6b7167: 1 mule patterns, 0 cycles, 0 intermediaries in 260-node subgraph (12.8 ms)
+02:54:12 │ WARNING │ src.graph.builder            │ Investigation TXN-ea66b1fbc143: 1 mule patterns, 0 cycles, 0 intermediaries in 403-node subgraph (23.3 ms)
+02:54:12 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2100, 'alerts': 1042, 'investigations': 1042, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 21, 'avg_anchor_ms': 0.612, 'verifications': 0, 'uptime_sec': 30.4}
+02:54:12 │ WARNING │ src.graph.builder            │ Investigation TXN-b3b5f90e6826: 1 mule patterns, 0 cycles, 0 intermediaries in 393-node subgraph (21.8 ms)
+02:54:12 │ WARNING │ src.graph.builder            │ Investigation TXN-9114b8e821d6: 1 mule patterns, 0 cycles, 0 intermediaries in 236-node subgraph (11.5 ms)
+02:54:12 │ WARNING │ src.graph.builder            │ Investigation TXN-36d19cd5e2d4: 1 mule patterns, 0 cycles, 0 intermediaries in 238-node subgraph (12.5 ms)
+02:54:12 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2200, 'alerts': 1092, 'investigations': 1092, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 22, 'avg_anchor_ms': 0.606, 'verifications': 0, 'uptime_sec': 30.9}
+02:54:12 │ WARNING │ src.graph.builder            │ Investigation TXN-74cf49628ba8: 1 mule patterns, 0 cycles, 0 intermediaries in 361-node subgraph (19.5 ms)
+02:54:13 │ WARNING │ src.graph.builder            │ Investigation TXN-511af768298b: 1 mule patterns, 0 cycles, 0 intermediaries in 198-node subgraph (10.0 ms)
+02:54:13 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2300, 'alerts': 1142, 'investigations': 1142, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 23, 'avg_anchor_ms': 0.605, 'verifications': 0, 'uptime_sec': 31.4}
+02:54:13 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2400, 'alerts': 1192, 'investigations': 1192, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 24, 'avg_anchor_ms': 0.603, 'verifications': 0, 'uptime_sec': 31.9}
+02:54:14 │ WARNING │ src.graph.builder            │ Investigation TXN-01fd241e3069: 1 mule patterns, 0 cycles, 0 intermediaries in 395-node subgraph (24.9 ms)
+02:54:14 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2500, 'alerts': 1242, 'investigations': 1242, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 25, 'avg_anchor_ms': 0.597, 'verifications': 0, 'uptime_sec': 32.4}
+02:54:14 │ WARNING │ src.graph.builder            │ Investigation TXN-947cac156ce0: 1 mule patterns, 0 cycles, 0 intermediaries in 354-node subgraph (23.1 ms)
+02:54:14 │ WARNING │ src.graph.builder            │ Investigation TXN-238815844b65: 1 mule patterns, 0 cycles, 0 intermediaries in 189-node subgraph (9.4 ms)
+02:54:14 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2600, 'alerts': 1292, 'investigations': 1292, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 26, 'avg_anchor_ms': 0.596, 'verifications': 0, 'uptime_sec': 32.9}
+02:54:14 │ WARNING │ src.graph.builder            │ Investigation TXN-2842b77a8250: 1 mule patterns, 0 cycles, 0 intermediaries in 135-node subgraph (8.5 ms)
+02:54:15 │ WARNING │ src.graph.builder            │ Investigation TXN-2b26ba62d1e3: 1 mule patterns, 0 cycles, 0 intermediaries in 175-node subgraph (8.9 ms)
+02:54:15 │ WARNING │ src.graph.builder            │ Investigation TXN-25b2a18a4a12: 1 mule patterns, 0 cycles, 0 intermediaries in 382-node subgraph (22.5 ms)
+02:54:15 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2700, 'alerts': 1342, 'investigations': 1342, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 27, 'avg_anchor_ms': 0.596, 'verifications': 0, 'uptime_sec': 33.4}
+02:54:15 │ WARNING │ src.graph.builder            │ Investigation TXN-b1796b46a64d: 1 mule patterns, 0 cycles, 0 intermediaries in 91-node subgraph (4.6 ms)
+02:54:15 │ WARNING │ src.graph.builder            │ Investigation TXN-01c78286e5d5: 1 mule patterns, 0 cycles, 0 intermediaries in 431-node subgraph (25.5 ms)
+02:54:16 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2800, 'alerts': 1392, 'investigations': 1392, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 28, 'avg_anchor_ms': 0.592, 'verifications': 0, 'uptime_sec': 34.1}
+02:54:16 │ WARNING │ src.graph.builder            │ Investigation TXN-4ee91aa9052c: 1 mule patterns, 0 cycles, 0 intermediaries in 218-node subgraph (11.7 ms)
+02:54:16 │ WARNING │ src.graph.builder            │ Investigation TXN-b30a549fd7a3: 1 mule patterns, 0 cycles, 0 intermediaries in 199-node subgraph (10.0 ms)
+02:54:16 │ WARNING │ src.graph.builder            │ Investigation TXN-390a685699c0: 1 mule patterns, 0 cycles, 0 intermediaries in 211-node subgraph (12.6 ms)
+02:54:16 │ WARNING │ src.graph.builder            │ Investigation TXN-4d7f2d4ba3d5: 1 mule patterns, 0 cycles, 0 intermediaries in 176-node subgraph (9.0 ms)
+02:54:16 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 2900, 'alerts': 1442, 'investigations': 1442, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 29, 'avg_anchor_ms': 0.593, 'verifications': 0, 'uptime_sec': 34.7}
+02:54:17 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 3000, 'alerts': 1492, 'investigations': 1492, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 30, 'avg_anchor_ms': 0.588, 'verifications': 0, 'uptime_sec': 35.1}
+02:54:17 │ WARNING │ src.graph.builder            │ Investigation TXN-0cfbab02b635: 1 mule patterns, 0 cycles, 0 intermediaries in 253-node subgraph (13.4 ms)
+02:54:17 │ WARNING │ src.graph.builder            │ Investigation TXN-29166e6f268f: 1 mule patterns, 0 cycles, 0 intermediaries in 157-node subgraph (7.8 ms)
+02:54:17 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 3100, 'alerts': 1542, 'investigations': 1542, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 31, 'avg_anchor_ms': 0.59, 'verifications': 0, 'uptime_sec': 35.7}
+02:54:18 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 3200, 'alerts': 1592, 'investigations': 1592, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 32, 'avg_anchor_ms': 0.592, 'verifications': 0, 'uptime_sec': 36.2}
+02:54:18 │ WARNING │ src.graph.builder            │ Investigation TXN-b57e80e0f14e: 1 mule patterns, 0 cycles, 0 intermediaries in 90-node subgraph (4.4 ms)
+02:54:18 │ WARNING │ src.graph.builder            │ Investigation TXN-e95285964f8d: 1 mule patterns, 0 cycles, 0 intermediaries in 248-node subgraph (12.4 ms)
+02:54:18 │ WARNING │ src.graph.builder            │ Investigation TXN-9cd4608aa37d: 1 mule patterns, 0 cycles, 0 intermediaries in 212-node subgraph (11.9 ms)
+02:54:18 │ WARNING │ src.graph.builder            │ Investigation TXN-e05718b0adb5: 1 mule patterns, 0 cycles, 0 intermediaries in 149-node subgraph (7.7 ms)
+02:54:18 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 3300, 'alerts': 1642, 'investigations': 1642, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 33, 'avg_anchor_ms': 0.587, 'verifications': 0, 'uptime_sec': 36.7}
+02:54:18 │ WARNING │ src.graph.builder            │ Investigation TXN-995ae7a25b1d: 1 mule patterns, 0 cycles, 0 intermediaries in 261-node subgraph (12.8 ms)
+02:54:19 │ WARNING │ src.graph.builder            │ Investigation TXN-8581636c9e7b: 1 mule patterns, 0 cycles, 0 intermediaries in 173-node subgraph (8.5 ms)
+02:54:19 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 3400, 'alerts': 1692, 'investigations': 1692, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 34, 'avg_anchor_ms': 0.587, 'verifications': 0, 'uptime_sec': 37.2}
+02:54:19 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 3500, 'alerts': 1742, 'investigations': 1742, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 35, 'avg_anchor_ms': 0.589, 'verifications': 0, 'uptime_sec': 37.7}
+02:54:19 │ WARNING │ src.graph.builder            │ Investigation TXN-2ff531dda9e5: 1 mule patterns, 0 cycles, 0 intermediaries in 204-node subgraph (10.1 ms)
+02:54:19 │ WARNING │ src.graph.builder            │ Investigation TXN-596cd0c2de00: 1 mule patterns, 0 cycles, 0 intermediaries in 399-node subgraph (24.6 ms)
+02:54:20 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 3600, 'alerts': 1792, 'investigations': 1792, 'model_updates': 1, 'system_events': 15, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 0, 'checkpoints': 36, 'avg_anchor_ms': 0.586, 'verifications': 0, 'uptime_sec': 38.3}
+02:54:20 │ WARNING │ src.graph.builder            │ Investigation TXN-06920c5aeca2: 1 mule patterns, 0 cycles, 0 intermediaries in 218-node subgraph (11.6 ms)
+02:54:20 │ INFO    │ payflow.main                 │ Routing complete: 1830 alerts dispatched, 0 nodes frozen
+02:54:20 │ INFO    │ payflow.main                 │ Pipeline complete: 6543 events in 35.7s (183 events/sec)
+
+════════════════════════════════════════════════════════════
+  EXECUTION SUMMARY
+════════════════════════════════════════════════════════════
+  Events ingested:         6,543
+  Features extracted:      5,043
+  ML inferences:           5,043
+  Alerts routed:           1,830
+  Elapsed:                 35.7s
+  Throughput:               183 events/sec
+────────────────────────────────────────────────────────────
+  GPU VRAM Used:          6607 MB
+  GPU VRAM Total:         8188 MB
+  GPU Utilization:         91 %
+  CPU Utilization:         11.4 %
+  LLM TPS:                  0.0 tok/s
+  LLM Tokens Total:            0
+  Load-Shed Active:           NO
+════════════════════════════════════════════════════════════
+02:54:20 │ INFO    │ payflow.main                 │ Serve mode: dashboard staying alive at http://127.0.0.1:8011 — Ctrl+C to stop
+02:54:20 │ INFO    │ payflow.main                 │ Live inference loop started (polling every 2s)
+02:54:38 │ INFO    │ src.simulation.threat_engine │ PS3 scenario launched: Rapid Layering Through Multiple Accounts [08a10971] -- 6 events
+02:54:38 │ INFO    │ payflow.main                 │ Live inference: scoring 1 new transactions...
+02:54:38 │ INFO    │ payflow.main                 │ Live inference: 1 alerts (1 HIGH, 0 MEDIUM) from 1 transactions
+02:54:39 │ INFO    │ src.simulation.threat_engine │ Attack completed: Rapid Layering Through Multiple Accounts [08a10971] -- 6/6 events ingested
+02:54:40 │ INFO    │ payflow.main                 │ Live inference: scoring 5 new transactions...
+02:54:41 │ INFO    │ payflow.main                 │ Live inference: 5 alerts (5 HIGH, 0 MEDIUM) from 5 transactions
+02:56:05 │ INFO    │ config.vram_manager          │ GPU mode: IDLE (assistant finished)
+02:56:05 │ ERROR   │ src.llm.agent                │ LLM call failed: timed out
+02:56:05 │ INFO    │ config.vram_manager          │ GPU mode: IDLE (assistant finished)
+02:56:05 │ ERROR   │ src.llm.agent                │ LLM call failed: timed out
+02:56:07 │ INFO    │ httpx                        │ HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+02:56:07 │ INFO    │ config.vram_manager          │ GPU mode: ASSISTANT
+02:56:07 │ INFO    │ httpx                        │ HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+02:56:07 │ INFO    │ config.vram_manager          │ GPU mode: ASSISTANT
+02:58:10 │ INFO    │ config.vram_manager          │ GPU mode: IDLE (assistant finished)
+02:58:10 │ ERROR   │ src.llm.agent                │ LLM call failed: timed out
+02:58:10 │ INFO    │ src.llm.agent                │ Investigation complete: txn=TXN-c531d5619331 verdict=SUSPICIOUS confidence=0.50 typology=None action=ESCALATE steps=1 tools=0 (249008.0 ms)
+02:58:10 │ INFO    │ config.vram_manager          │ GPU mode: IDLE (assistant finished)
+02:58:10 │ ERROR   │ src.llm.agent                │ LLM call failed: timed out
+02:58:10 │ INFO    │ src.llm.agent                │ Investigation complete: txn=TXN-91666678fee7 verdict=SUSPICIOUS confidence=0.50 typology=None action=ESCALATE steps=1 tools=0 (249018.5 ms)
+03:01:42 │ INFO    │ src.simulation.threat_engine │ PS3 scenario launched: Rapid Layering Through Multiple Accounts [f21a5116] -- 6 events
+03:01:42 │ INFO    │ src.simulation.threat_engine │ Attack completed: Rapid Layering Through Multiple Accounts [f21a5116] -- 6/6 events ingested
+03:01:43 │ INFO    │ payflow.main                 │ Live inference: scoring 6 new transactions...
+03:01:43 │ INFO    │ payflow.main                 │ Live inference: 5 alerts (3 HIGH, 2 MEDIUM) from 6 transactions
+03:01:43 │ INFO    │ src.blockchain.ledger        │ Ledger metrics: {'blocks': 3700, 'alerts': 1839, 'investigations': 1839, 'model_updates': 1, 'system_events': 19, 'zkp_verifications': 0, 'circuit_breaker': 0, 'agent_verdicts': 2, 'checkpoints': 37, 'avg_anchor_ms': 0.588, 'verifications': 0, 'uptime_sec': 481.9}

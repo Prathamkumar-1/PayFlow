@@ -1,0 +1,637 @@
+================================================================================
+  PAYFLOW — BLOCKCHAIN-POWERED REAL-TIME FRAUD DETECTION SYSTEM
+  Complete Project Structure & Architecture Reference
+================================================================================
+Created: 2026-05-25  |  Project: iDEA 2.0 Problem Statement 3 (Union Bank Of India)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  MISSION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PayFlow is a full-stack, real-time fraud detection and prevention system built
+specifically for Indian banking (UPI, IMPS, NEFT, RTGS, NETBANKING). It combines:
+  • A tamper-evident blockchain audit ledger (Ed25519 signed)
+  • ML ensemble (XGBoost + GNN + Isolation Forest + Autoencoder)
+  • LangGraph-powered AI investigator agent (Qwen 3.5 4B via Ollama)
+  • Real-time CDC streaming (Change Data Capture) pipeline
+  • An adaptive "Event Lab" for controlled fraud scenario simulation
+  • Human-in-the-Loop (HITL) escalation for borderline decisions
+  • Central Fraud Registry (CFR), AML stage detection, and regulatory reporting
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ROOT-LEVEL FILES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  main.py               — Application entry point. Bootstraps the full PayFlow
+                          orchestrator, attaches all sub-systems (ML, graph, 
+                          blockchain, streaming, agent, threat engine), and
+                          launches the FastAPI + uvicorn server on port 8010.
+                          Also triggers initial ML training if models missing.
+
+  pyproject.toml        — Python project dependencies (FastAPI, LangGraph,
+                          XGBoost, PyTorch Geometric, Ollama, Anthropic SDK,
+                          Groq SDK, bitsandbytes, PEFT, scikit-learn, etc.)
+
+  landing.html          — Static landing/marketing page for the PayFlow demo.
+
+  payflow_graph_ui.html — Standalone HTML dashboard (Cytoscape.js + D3) for
+                          visualising the transaction graph topology in real time.
+
+  README.md             — Full Phase-by-Phase implementation documentation
+                          covering all 16+ phases of development.
+
+  Implementation_Part1.md  — Detailed implementation notes for Phases 1–7.
+  Implementation_Part2.md  — Phases 8–11 implementation notes.
+  Implementation_Part3.md  — Phases 12–16+ implementation notes.
+  PHASE_AUDIT_REPORT.md    — Audit report of all completed implementation phases.
+  Fraud Case Study Reports.md — Real-world Indian banking fraud case analyses.
+  Problem_Statement.md     — Original iDEA 2.0 PS3 problem statement.
+  payflow_build_prompt.md  — AI system-building prompt used for construction.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  config/  — Hardware-Aware Global Configuration
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  config/__init__.py       — Package init, exports all config singletons.
+
+  config/settings.py       — MASTER configuration file. Contains all frozen
+                             dataclass configs for every subsystem:
+    • VRAMBudget          — RTX 4070 8GB VRAM partitioning strategy
+    • XGBoostConfig       — XGBoost hyperparams (VRAM-constrained)
+    • GNNConfig           — Graph Attention Network (GAT) hyperparams
+    • OllamaConfig        — Qwen 3.5 4B model settings (local Ollama)
+    • FraudThresholds     — INR thresholds (CTR ₹10L, structuring band, etc.)
+    • LedgerConfig        — SQLite-backed blockchain ledger paths
+    • CircuitBreakerConfig — ML+GNN+Graph weighted consensus thresholds
+    • InvestigatorAgentConfig — LangGraph agent iteration limits
+    • UnstructuredAgentConfig — NLU sub-agent configuration
+    • FineTuningConfig    — QLoRA + GRPO finetuning params
+    • StreamingConfig     — CDC streaming poll intervals, batch sizes
+    • HITLConfig          — Human-in-the-Loop confidence thresholds
+    • AgentBreakerConfig  — Agent-triggered blockchain freeze thresholds
+    • DashboardConfig     — FastAPI+SSE dashboard host/port
+    • GPUConcurrencyConfig — Priority-based VRAM arbitration
+    • SimulationConfig    — Threat simulation engine defaults
+
+  config/gpu_concurrency.py — Priority queue for cooperative VRAM sharing.
+                              Keeps LLM permanently in VRAM while scaling
+                              KV cache and offloading GNN to CPU on pressure.
+
+  config/vram_manager.py   — Context managers for VRAM mode transitions
+                             (assistant_mode, analysis_mode). Bridges Ollama
+                             keep_alive and torch.cuda.empty_cache().
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  src/  — Core Backend Source Code (10 modules)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────────────────────
+  src/api/  — FastAPI Application & REST Endpoints
+────────────────────────────────────────────────────────
+
+  app.py          — FastAPI app factory. Registers all route routers, attaches
+                    orchestrator to app.state, mounts SSE endpoints.
+
+  events.py       — EventBroadcaster: SSE (Server-Sent Events) pub/sub hub.
+                    Channels: graph, agent, circuit_breaker, risk_scores,
+                    system, simulation, pipeline, intel, event_lab,
+                    countermeasure, transaction_decision.
+
+  ps3_case.py     — PS3 (Problem Statement 3) deterministic case replay.
+                    Generates realistic iDEA 2.0 fund-flow scenarios.
+
+  routes/
+    __init__.py       — Route registration.
+    analyst.py        — HITL escalation management endpoints.
+    analytics.py      — Fraud analytics + temporal pattern queries.
+    countermeasures.py — Countermeasure execution endpoints.
+    dashboard.py      — Real-time dashboard data endpoints:
+                        snapshot, graph topology, system telemetry SSE stream.
+    fraud.py          — Fraud intelligence API (63KB):
+                        risk scoring, pre-approval gate, rule engine,
+                        regulatory reports (STR/CTR/FMR), CFR registry,
+                        anomaly detection, AML stages, investigation case mgmt.
+    intel.py          — Pre-fraud intelligence endpoints.
+    intelligence.py   — Extended intelligence query endpoints.
+    simulation.py     — Threat Simulation & Event Lab endpoints:
+                        attack launcher, PS3 scenarios, event-lab
+                        templates/preview/launch/explainability,
+                        custom event injection, countermeasure approval/reject.
+
+────────────────────────────────────────────────────────
+  src/blockchain/  — Tamper-Evident Blockchain Ledger
+────────────────────────────────────────────────────────
+
+  ledger.py       — Core blockchain: append-only SQLite ledger with Ed25519
+                    signatures, Merkle tree checkpoints every 100 blocks.
+                    Block types: TRANSACTION, VERDICT, FREEZE_ORDER, AUDIT_EVENT.
+
+  circuit_breaker.py — Smart contract circuit breaker. Weighted consensus:
+                       ML(35%) + GNN(35%) + Graph(30%). Issues freeze orders
+                       when consensus > 0.80. Auto-unfreeze TTL: 1 hour.
+                       Anchors all freeze orders to blockchain immutably.
+
+  agent_breaker.py — Agent-triggered defensive actions:
+                     CRITICAL (≥0.95): node freeze + device ban + routing pause.
+                     HIGH_SUSPICION (≥0.80): routing pause only.
+                     Cascade freeze for mule networks (up to 10 nodes).
+
+  consortium.py   — Multi-bank consortium intelligence sharing. Cross-bank
+                    fraud signal propagation with trust-scored sources.
+
+  crypto.py       — Cryptographic primitives: Ed25519 signing, SHA-256 hashing,
+                    key generation and management.
+
+  models.py       — Pydantic blockchain block and freeze order models.
+
+  storage.py      — SQLite persistence layer for the blockchain. WAL mode for
+                    concurrent reads during agent investigations.
+
+  zkp.py          — Zero-Knowledge Proof anchoring. Generates ZKP commitments
+                    for frozen node evidence without leaking full transaction data.
+
+────────────────────────────────────────────────────────
+  src/cfr/  — Central Fraud Registry
+────────────────────────────────────────────────────────
+
+  registry.py     — Central Fraud Registry (CFR): cross-bank fraud blacklist
+                    with fuzzy account/entity matching. Supports KYC pre-check,
+                    fraud reporting, severity scoring (LOW/MEDIUM/HIGH/CRITICAL).
+                    Categories: internet banking, UPI, card, ATM, SWIFT, others.
+
+  scoring.py      — CFR-aware composite risk scorer: 40% CFR match + 30% 
+                    transaction size + 20% new account risk + 10% geo deviation.
+
+────────────────────────────────────────────────────────
+  src/graph/  — Transaction Graph Analysis
+────────────────────────────────────────────────────────
+
+  builder.py      — NetworkX directed transaction graph builder. Maintains
+                    live node/edge metadata (account types, volumes, fraud counts,
+                    community IDs, freeze status). Updates on every event.
+
+  algorithms.py   — Graph algorithms for fraud pattern detection:
+                    • Mule chain detection (DFS multi-hop path analysis)
+                    • Circular laundering (cycle detection via Johnson's algo)
+                    • Betweenness centrality for intermediary detection
+                    • Louvain community detection for cluster anomalies
+                    • Star pattern detection for collector accounts
+                    • Chain detector for rapid layering sequences
+
+  chain_detector.py — Dedicated rapid-layering chain detector. Identifies
+                      transaction sequences within configurable time windows
+                      (default: 30 minutes) with minimum hop count (≥3).
+
+────────────────────────────────────────────────────────
+  src/ingestion/  — Event Ingestion & Streaming Pipeline
+────────────────────────────────────────────────────────
+
+  schemas.py      — Pydantic event schemas: Transaction, AuthEvent,
+                    InterbankMessage. Enums: Channel (UPI/IMPS/NEFT/RTGS/POS/
+                    NETBANKING/MOBILE), AccountType, AuthAction, FraudPattern.
+
+  validators.py   — CRC32 checksum validators for all event types.
+                    compute_transaction_checksum, compute_auth_checksum,
+                    compute_interbank_checksum.
+
+  stream_processor.py — Live ingestion pipeline. Fan-out to ML, graph,
+                        circuit breaker, and agent consumers. Broadcasts
+                        pipeline stages to SSE stream.
+
+  generators/
+    synthetic_transactions.py — Synthetic transaction generator for ML
+                                training data. Generates balanced legitimate/
+                                fraudulent samples across all fraud typologies.
+
+────────────────────────────────────────────────────────
+  src/intel/  — Pre-Fraud Intelligence Service
+────────────────────────────────────────────────────────
+
+  pre_fraud.py    — PreFraudIntelService (111KB — the largest file):
+                    External OSINT/SOCMINT intelligence ingestion.
+                    • FraudTrendCluster: emerging fraud patterns with trust scores
+                    • AdaptivePlaybook: countermeasure playbooks from intel sources
+                    • FraudSignal: individual intelligence signals (tweets, news, 
+                      FIU-IND alerts, RBI circulars, consortium feeds)
+                    • WatchlistEntry: VPA, IFSC, device fingerprint watchlists
+                    • Provides active_context_for_ai() used by the LLM agent
+                    • Integrates with Event Lab to prime scenario generation
+
+────────────────────────────────────────────────────────
+  src/llm/  — AI Investigation Layer (LangGraph + Qwen + Claude/Groq)
+────────────────────────────────────────────────────────
+
+  orchestrator.py — PayFlowLLM: VRAM-aware Ollama client wrapping Qwen 3.5 4B.
+                    Manages VRAM mode transitions, model fallback resolution,
+                    health gate enforcement before inference.
+
+  agent.py        — InvestigatorAgent (49KB): LangGraph state machine.
+                    Think-Act-Observe loop for autonomous fraud investigation:
+                    • THINK node: Chain-of-Thought reasoning (Qwen 3.5 think mode)
+                    • EXECUTE_TOOLS node: concurrent tool dispatch
+                    • VERDICT node: structured fraud verdict extraction
+                    • ESCALATE_HITL / EVALUATE / DISPATCH nodes: HITL path
+                    Maintains full investigation records per transaction.
+
+  tools.py        — ToolExecutor with 8 forensic tools:
+                    query_transaction_graph, get_velocity_data,
+                    check_blacklist, get_account_history,
+                    analyze_device_fingerprint, get_circuit_breaker_status,
+                    query_cfr_registry, get_graph_neighbors.
+
+  prompts.py      — System prompts, CoT templates, verdict schema.
+                    INVESTIGATOR_SYSTEM_PROMPT: Indian banking fraud specialist.
+                    COT_ACTIVATION_PREFIX: Activates Qwen's /think mode.
+
+  hitl.py         — Human-in-the-Loop escalation:
+                    ConfidenceEvaluator, GraphContextPackager, HITLDispatcher.
+                    Escalates investigations where agent confidence < threshold.
+
+  health_check.py — GPU/VRAM health diagnostics. Queries nvidia-smi,
+                    validates VRAM headroom before LLM inference.
+
+  nl_query.py     — Natural language query interface for real-time graph 
+                    analysis. Allows analysts to query the live transaction 
+                    graph in plain English.
+
+  finetuning.py   — QLoRA + GRPO fine-tuning pipeline (Phase 10):
+                    Trains Qwen 3.5 9B with LoRA adapters on investigation
+                    records. GRPO rewards calibrated fraud detection accuracy.
+
+  unstructured_agent.py  — NLU sub-agent for unstructured data analysis:
+                           social engineering detection, linguistic anomalies,
+                           device behavior patterns. Consensus injection into
+                           main verdict.
+
+  unstructured_models.py — Pydantic models for NLU findings and analysis results.
+
+  unstructured_prompts.py — Prompts for social engineering detection and
+                            linguistic anomaly analysis.
+
+  round_robin_llm.py     — [NEW in this session] Round-robin API key pool
+                           manager for 30 Claude/Groq API keys. Provides
+                           automatic failover, rate-limit detection, and
+                           health-based key rotation. Used by the Event Lab
+                           explainability engine for cloud-powered inference.
+
+────────────────────────────────────────────────────────
+  src/ml/  — Machine Learning Detection Pipeline
+────────────────────────────────────────────────────────
+
+  feature_engine.py   — 36-dimensional feature extraction from raw events:
+                        velocity (1h/24h/7d), time-of-day encoding,
+                        amount z-score, geo-distance anomaly, device entropy,
+                        sender/receiver historical patterns, channel frequency.
+
+  models/
+    xgboost_classifier.py  — XGBoost fraud classifier (CUDA histogram method).
+    logistic_classifier.py — Logistic regression for fast baseline scoring.
+    random_forest_classifier.py — Random forest ensemble member.
+    gnn_scorer.py          — Graph Neural Network (GAT) scorer using PyG
+                             NeighborLoader mini-batching. 3-layer GAT with
+                             4 attention heads.
+    alert_router.py        — Thresholded alert routing: routes high-risk
+                             transactions to the LangGraph investigator agent.
+    threshold.py           — Dynamic threshold calibration based on live
+                             fraud rate feedback.
+
+  ensemble.py         — ML ensemble combiner: weighted average of XGBoost,
+                        logistic regression, and random forest scores.
+
+  explainability.py   — ML model explainability: SHAP/feature importance
+                        for XGBoost, permutation importance for other models.
+                        Generates human-readable feature contribution reports.
+
+  risk_scorer.py      — Composite transaction risk scorer:
+                        large-txn score + velocity score + new-account score +
+                        location score + rule-based adjustments.
+
+  rule_engine.py      — Deterministic rule engine: 15+ rules covering
+                        large amount thresholds, velocity limits, off-hours
+                        detection, new beneficiary detection, device trust,
+                        geo-distance anomaly, structuring band detection.
+
+  behavioral.py       — Behavioral profiling: tracks per-account transaction
+                        history, velocity patterns, channel preferences.
+
+  drift_detector.py   — Concept drift detection: monitors ML model performance
+                        over time, triggers retraining when distribution shifts.
+
+  aml_stages.py       — AML (Anti-Money Laundering) stage detection:
+                        Placement, Integration, Layering stage classifiers
+                        for the three-stage money laundering model.
+
+  autoencoder_detector.py — Autoencoder-based anomaly detection.
+                            Learns normal transaction patterns; flags high
+                            reconstruction error as anomalous.
+
+  isolation_detector.py   — Isolation Forest anomaly detector for unsupervised
+                            outlier detection without fraud labels.
+
+  device_verifier.py  — Device fingerprint risk scoring. Tracks known devices
+                        per account, detects multi-account device sharing
+                        (mule device fingerprints).
+
+  fiu_intelligence.py — FIU-IND (Financial Intelligence Unit - India) 
+                        intelligence integration. Processes intelligence
+                        bulletins and generates risk modifiers.
+
+  investigation.py    — Investigation case management: opens, tracks,
+                        and closes fraud investigation cases. Supports
+                        legal referral and law enforcement notification workflows.
+
+  mule_scorer.py      — UPI mule network scorer. Specialized scoring for
+                        accounts exhibiting mule behavior patterns
+                        (rapid fan-in/fan-out, device sharing, dormant then burst).
+
+  pdf_generator.py    — PDF evidence report generator for regulatory submission.
+
+  pre_approval_gate.py — Pre-authorisation fraud check (APPROVE/HOLD/BLOCK).
+                         Fast-path rule + ML evaluation before transaction clears.
+
+  regulatory_reporter.py — Regulatory report generation:
+                           STR (Suspicious Transaction Report) for FIU-IND,
+                           CTR (Cash Transaction Report) for amounts ≥ ₹10L,
+                           FMR (Fraud Monitoring Return) for RBI submission.
+
+  text_anomaly.py     — Text/metadata anomaly detection in transaction remarks
+                        and account names.
+
+  velocity.py         — Velocity engine: tracks transaction counts and volumes
+                        across 1h/24h/7d windows per account. Z-score
+                        normalization for velocity anomaly scoring.
+
+  victim_tracer.py    — Victim fund tracing: follows money flows downstream
+                        from a fraud source to identify victims and mule paths.
+
+────────────────────────────────────────────────────────
+  src/simulation/  — Adaptive Threat Simulation Engine
+────────────────────────────────────────────────────────
+
+  event_lab.py    — Adaptive Event Lab (59KB — core simulation orchestrator):
+                    • 10 fraud scenario templates (UPI mule cashout, digital
+                      arrest chain, KYC phishing, merchant QR misuse, loan app
+                      extortion, investment scam layering, dormant activation,
+                      round-trip shell loop, structuring, profile mismatch RTGS)
+                    • EventRunRegistry: tracks all live/historical runs
+                    • EventLabRun: full run lifecycle with stages and proposals
+                    • CountermeasureProposal: analyst-gated action proposals
+                      (HOLD, FREEZE_NODE, FREEZE_1HOP, BAN_DEVICE,
+                       WATCHLIST_DELTA, CREATE_CASE, GENERATE_EVIDENCE,
+                       PAUSE_ROUTING)
+                    • explainability_response(): full stage-by-stage audit trace
+                    • Integration with Pre-Fraud Intel for intel-primed scenarios
+
+  attack_generators.py — Attack generator functions for the legacy Threat
+                         Simulation Engine (43KB). Generates UPI mule network,
+                         circular laundering, and velocity phishing scenarios
+                         as drip-fed event sequences.
+
+  threat_engine.py — ThreatSimulationEngine: manages concurrent attack
+                     scenarios with rate-limited event injection.
+                     Up to 3 concurrent attacks, 200 events per attack.
+
+────────────────────────────────────────────────────────
+  src/streaming/  — Real-Time CDC Streaming
+────────────────────────────────────────────────────────
+
+  cdc.py          — Change Data Capture reader. Polls SQLite banking.db
+                    for new transactions via CDC triggers. 10-100ms adaptive
+                    poll interval with idle backoff.
+
+  consumer.py     — StreamingConsumer: processes CDC batches through the
+                    full ML+graph+agent pipeline. Handles concurrency
+                    (3 parallel consumers) and circuit breaking on errors.
+
+  endpoints.py    — BankingEndpointSimulator: simulates a live banking API
+                    generating 50 TPS with 5% injected fraud ratio and
+                    configurable burst multipliers.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  frontend/  — React + TypeScript Dashboard (Vite + TanStack Query)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Built with: React 18 + TypeScript + Vite + TanStack Query + Zustand + Lucide
+
+  frontend/app/src/
+  ├── App.tsx           — Root component with routing and layout.
+  ├── main.tsx          — React DOM entry point.
+  ├── index.css         — Global CSS design system tokens.
+  │
+  ├── pages/
+  │   ├── overview.tsx        — System overview: orchestrator metrics, 
+  │   │                         hardware telemetry, graph stats.
+  │   ├── analytics.tsx       — Fraud analytics dashboard: verdict history,
+  │   │                         pattern breakdown, temporal trends, STR/CTR.
+  │   ├── compliance.tsx      — Compliance dashboard: blockchain audit log,
+  │   │                         regulatory reports, ledger verification.
+  │   ├── investigations.tsx  — Active investigations: HITL queue, agent
+  │   │                         CoT traces, investigation records.
+  │   ├── intelligence.tsx    — Pre-fraud intelligence viewer.
+  │   ├── pre-fraud-intel.tsx — Full pre-fraud intel management UI (68KB):
+  │   │                         playbook creation, trend monitoring,
+  │   │                         signal ingestion, watchlist management.
+  │   ├── threat-sim.tsx      — Threat Simulation Page (main demo page):
+  │   │                         Adaptive Event Lab + Pipeline X-Ray.
+  │   └── system.tsx          — System health and configuration view.
+  │
+  ├── components/
+  │   ├── simulation/
+  │   │   ├── adaptive-event-lab.tsx     — Main Event Lab UI (33KB):
+  │   │   │                               Template selector, event chain creator,
+  │   │   │                               backend visibility + AI explainability,
+  │   │   │                               analyst countermeasure console.
+  │   │   ├── pipeline-transparency.tsx  — Pipeline X-Ray component (31KB):
+  │   │   │                               Stage-by-stage algorithm visibility for
+  │   │   │                               Ingestion→ML→Graph→CB→LLM→Verdict.
+  │   │   ├── pipeline-motion-visualizer.tsx — Animated pipeline flow diagram.
+  │   │   ├── custom-event-builder.tsx   — Custom event injection form (36KB).
+  │   │   ├── attack-launcher.tsx        — Legacy attack scenario launcher.
+  │   │   ├── scenario-monitor.tsx       — Active scenario status monitor.
+  │   │   ├── scenario-history.tsx       — All scenarios history table.
+  │   │   ├── scenario-inspector.tsx     — Detailed scenario inspector.
+  │   │   └── simulation-event-trace.tsx — Live event trace viewer.
+  │   │
+  │   ├── investigations/   — Investigation-related components.
+  │   ├── panels/           — Dashboard info panels.
+  │   ├── layout/           — Layout (sidebar, header, nav).
+  │   └── shared/           — Shared UI primitives.
+  │
+  ├── hooks/
+  │   └── use-api.ts        — TanStack Query hooks for all API calls and SSE
+  │                           connections. Includes useEventLabTemplates,
+  │                           useCreateEventLabRun, useEventLabExplainability,
+  │                           useApproveCountermeasure, etc.
+  │
+  ├── stores/
+  │   └── use-activity-store.ts — Zustand store for real-time event lifecycle
+  │                               tracking. Processes SSE events from all
+  │                               channels into per-transaction stage maps.
+  │
+  ├── lib/
+  │   ├── types.ts          — All TypeScript interfaces mirroring FastAPI
+  │   │                       response shapes (1700 lines).
+  │   └── utils.ts          — Utility functions (cn, formatters, etc.)
+  │
+  └── types/                — Additional TypeScript type declarations.
+
+  frontend/templates/
+  └── dashboard.html        — Legacy Jinja2 SSR dashboard template.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  data/  — Persistent Data Storage
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ledger2.db         — Main SQLite blockchain ledger (~361MB, WAL mode).
+  ledger2.db-shm     — WAL shared memory file.
+  ledger2.db-wal     — WAL write-ahead log.
+  processed/         — Processed event records.
+  raw/               — Raw ingested event data.
+  synthetic/         — Synthetic training data generated by the ML pipeline.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  artifacts/  — Generated Model & Evidence Artifacts
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  models/        — Trained ML model files (XGBoost, GNN, Isolation Forest,
+                   Autoencoder, QLoRA adapters).
+  evidence/      — Forensic evidence packages generated during investigations.
+  ledger/        — Ed25519 key material for blockchain signing.
+  reports/       — Generated regulatory reports (STR, CTR, FMR PDFs).
+  smoke/         — Smoke test result artifacts.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  tests/  — Comprehensive Test Suite (17 test files)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  test_all_phases.py            — End-to-end integration tests for all phases.
+  test_blockchain.py            — Blockchain ledger integrity tests.
+  test_event_lab_countermeasures.py — Event Lab countermeasure tests.
+  test_orchestrator.py          — Orchestrator lifecycle tests.
+  test_phase10_finetuning.py    — QLoRA/GRPO finetuning pipeline tests.
+  test_phase11_streaming.py     — CDC streaming pipeline tests.
+  test_phase12_hitl.py          — Human-in-the-Loop escalation tests.
+  test_phase13_agent_breaker.py — Agent-triggered CB tests.
+  test_phase14_dashboard.py     — Dashboard API tests.
+  test_phase15_gpu_concurrency.py — GPU VRAM management tests.
+  test_phase16_simulation.py    — Threat simulation tests.
+  test_phase8_zkp_breaker.py    — ZKP + circuit breaker tests.
+  test_phase9_agent.py          — LangGraph agent tests.
+  test_phase9b_unstructured_agent.py — NLU sub-agent tests.
+  test_pre_fraud_intel.py       — Pre-fraud intelligence tests.
+  test_ps3_workflow.py          — PS3 end-to-end workflow tests.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  scripts/  — Deployment & Setup Scripts
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  deploy_ollama.sh   — Pulls and configures Qwen 3.5 4B via Ollama. Builds
+                       the custom payflow-qwen Modelfile with Indian banking
+                       system prompt and quantization settings.
+
+  init_env.sh        — Python environment setup: creates virtualenv, installs
+                       all dependencies from pyproject.toml, configures CUDA.
+
+  Modelfile          — Ollama Modelfile for the payflow-qwen custom model.
+                       Sets FROM, custom SYSTEM prompt, PARAMETER settings
+                       (temperature 0.3, num_ctx 16384, q8_0 KV cache).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  logs/  — Runtime Log Files
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  payflow-8010.out.log    — Main server stdout log (active run).
+  payflow-8010.err.log    — Main server stderr log.
+  payflow_8010.out.log    — Full accumulated stdout log (~8MB).
+  ollama.out.log          — Ollama model server output.
+  ollama.err.log          — Ollama error log (~135KB).
+  Various *.done/live/ready/restart logs — PM2-managed server lifecycle logs.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  KEY ARCHITECTURE FLOWS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+TRANSACTION PROCESSING PIPELINE:
+  Event → Ingestion (Pydantic validate + CRC32)
+        → Feature Engine (36-dim vector)
+        → XGBoost Classifier (CUDA)
+        → GNN Scorer (optional, PyTorch Geometric)
+        → Rule Engine (15+ deterministic rules)
+        → Alert Router (threshold gate)
+        → Circuit Breaker (weighted consensus: ML+GNN+Graph)
+        → [IF HIGH RISK] → LangGraph Investigator Agent (Qwen 3.5 4B)
+                         → [IF LOW CONFIDENCE] → HITL Escalation
+        → Verdict → Blockchain Anchor (Ed25519 + Merkle)
+        → SSE Broadcast → React Dashboard
+
+EVENT LAB (DEMO) FLOW:
+  Pre-Fraud Intel (OSINT/SOCMINT playbooks)
+    → Template Selection (10 fraud typologies)
+    → Event Chain Generation (1-24 events: txn/auth/interbank)
+    → Live Pipeline Injection (same pipeline as above)
+    → Countermeasure Proposals (HOLD/FREEZE/BAN/etc.)
+    → Analyst Approval Gate (human gating)
+    → Circuit Breaker Execution → Blockchain Anchor
+
+AI EXPLAINABILITY STACK:
+  LangGraph THINK → tool calls (graph/velocity/CFR/device/blacklist)
+               → EXECUTE_TOOLS → evidence accumulation
+               → VERDICT (structured JSON: verdict/confidence/typology/
+                          reasoning_summary/evidence_cited/action)
+  Frontend: Pipeline X-Ray shows each stage with algorithm name,
+            tech stack, live scores, reasoning, and feature contributions.
+
+ROUND-ROBIN LLM API POOL (Cloud Fallback):
+  30 API keys (Claude + Groq) in round-robin rotation.
+  Used when local Ollama is unavailable or for Event Lab explainability.
+  Automatic failover: on rate-limit or error → try next key in pool.
+  Health tracking: marks degraded keys, skips for 60s before retry.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  FRAUD TYPOLOGIES SUPPORTED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. UPI Mule Network         — Rapid fan-out to mule accounts via UPI
+  2. Digital Arrest Scam      — Social engineering + mule mash cashout
+  3. KYC APK Phishing         — OTP theft → device takeover → UPI drain
+  4. Merchant QR Misuse       — Concentration fraud via QR codes
+  5. Loan App Extortion       — Structuring + mule consolidation
+  6. Investment Scam Layering — Multi-hop RTGS/NEFT inconsistent with profile
+  7. Dormant Account Abuse    — Sudden activation of long-dormant accounts
+  8. Round-Trip Shell Loop    — Circular fund movement through shell entities
+  9. Structuring              — Multiple sub-threshold transactions to avoid CTR
+  10. Profile Mismatch RTGS  — High-value transfer inconsistent with income
+  11. Circular Laundering     — Johnson's cycle detection in graph
+  12. Velocity Phishing       — Credential theft + rapid velocity pattern
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  TECH STACK SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Backend    : Python 3.11+, FastAPI, LangGraph, Pydantic V2
+  ML/AI      : XGBoost (CUDA), PyTorch + PyG (GNN), scikit-learn,
+               Ollama (Qwen 3.5 4B), Claude API, Groq API,
+               bitsandbytes + PEFT (QLoRA/GRPO finetuning)
+  Database   : SQLite (WAL), append-only blockchain ledger
+  Graph      : NetworkX, Louvain community detection
+  Security   : Ed25519 (PyNaCl), SHA-256, ZKP commitments, CRC32 checksums
+  Frontend   : React 18, TypeScript, Vite, TanStack Query, Zustand,
+               Lucide Icons, Cytoscape.js (graph visualization)
+  Protocols  : Server-Sent Events (SSE), REST, WebSocket
+  Serving    : Uvicorn + uvloop, PM2 process manager
+
+================================================================================
+  END OF PAYFLOW PROJECT STRUCTURE DOCUMENT
+================================================================================
