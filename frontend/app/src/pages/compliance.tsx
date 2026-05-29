@@ -4,15 +4,14 @@
 // FIU-IND, Investigation Management, Mule Detection, Victim Fund Tracing
 // ============================================================================
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useCallback } from 'react'
 import { useT } from '@/lib/i18n'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Shield, ShieldCheck, ShieldAlert, FileCheck, Scale, AlertTriangle,
   Landmark, Search, Eye, Layers, GitBranch, Users, Fingerprint,
-  Activity, Clock, CheckCircle2, XCircle, Pause, ChevronRight,
-  BarChart3, ToggleLeft, ToggleRight, TrendingUp, Gavel, FileText,
-  Network, Banknote, UserX, Route, Brain, Radio, Zap,
+  Activity, ToggleLeft, ToggleRight, Gavel, FileText,
+  Network, Banknote, UserX, Route, Brain, Radio,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -24,10 +23,8 @@ import {
   fetchClusters, fetchIntermediaries,
 } from '@/lib/api-client'
 import type {
-  RuleInfo, GateStatsResponse, CFRStatsResponse, AMLStatsResponse,
-  FIUStatsResponse, InvestigationStatsResponse, MuleStatsResponse,
-  VictimStatsResponse, AnomalyStatsResponse, MuleChain, SuspectedMule,
-  SuspiciousCluster, CentralityIntermediary, RegulatoryReport,
+  RuleInfo, GateStatsResponse,
+  FIUStatsResponse, InvestigationStatsResponse,
 } from '@/lib/types'
 
 // ============================================================================

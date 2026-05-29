@@ -114,7 +114,7 @@ export function ForensicEvidenceChain() {
                 {isExpanded && (
                   <div className="px-2 pb-2.5 pt-0.5">
                     <div className="relative ml-3 border-l border-border-subtle/50 pl-3 space-y-2">
-                      {chain.entries.map((entry, i) => {
+                      {chain.entries.map((entry) => {
                         const cfg = STEP_CONFIG[entry.type]
                         const StepIcon = cfg.icon
                         return (

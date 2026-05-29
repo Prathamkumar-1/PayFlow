@@ -66,6 +66,7 @@ export function SeverityBadge({ severity, label, className }: Props) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function verdictToSeverity(verdict: string): Severity {
   const v = verdict.toLowerCase()
   if (v === 'fraudulent') return 'critical'

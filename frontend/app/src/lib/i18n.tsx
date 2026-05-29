@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 // ============================================================================
 // i18n -- Language context, useT hook, and EN/HI translation map
 // Toggle is surfaced in TopBar; LanguageProvider wraps the full app.

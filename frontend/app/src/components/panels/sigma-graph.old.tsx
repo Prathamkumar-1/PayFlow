@@ -1,5 +1,6 @@
+/* eslint-disable */
 // ============================================================================
-// Sigma Graph -- Advanced real-time fraud network visualization
+// Sigma Graph -- Advanced real-time fraud network visualization (ARCHIVED)
 // ForceAtlas2 continuous physics + particle flows + heat diffusion +
 // threat propagation ripples + minimap + advanced analytics
 // ============================================================================

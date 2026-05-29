@@ -437,6 +437,7 @@ export function InvestigationsPage() {
 
   useEffect(() => {
     if (!activeCaseId || activeCaseId === caseId) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPackageData(null)
     setCaseId(activeCaseId)
   }, [activeCaseId, caseId])

@@ -17,6 +17,7 @@ import os
 import sys
 import time
 import tempfile
+import pytest
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 from typing import NamedTuple
@@ -435,6 +436,7 @@ def _make_mock_pipeline():
 
 async def test_orchestrator_initialize_wires_consumers():
     """initialize() wires the correct consumers to router and pipeline."""
+    pytest.importorskip("ollama", reason="requires ollama package (GPU environment)")
     orch = PayFlowOrchestrator(
         num_events=10, num_accounts=5, skip_llm=True, cpu_only=True,
         profiler_interval=60.0,  # don't actually poll
@@ -507,6 +509,7 @@ async def test_orchestrator_shutdown_verifies_chain():
 
 async def test_orchestrator_context_manager():
     """async with PayFlowOrchestrator runs initialize + shutdown."""
+    pytest.importorskip("ollama", reason="requires ollama package (GPU environment)")
     orch = PayFlowOrchestrator(
         num_events=5, num_accounts=3, skip_llm=True, cpu_only=True,
         profiler_interval=60.0,

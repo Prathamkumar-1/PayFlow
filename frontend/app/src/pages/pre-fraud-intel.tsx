@@ -1216,7 +1216,7 @@ export function PreFraudIntelPage() {
     { label: t('videos'), value: String(cockpit?.metrics.real_videos ?? mediaData?.summary.real_videos ?? 0), accent: 'text-accent-primary' },
     { label: t('media_health'), value: pct(cockpit?.metrics.media_health ?? mediaData?.summary.health), accent: 'text-emerald-300' },
     { label: t('active_playbooks'), value: String(tuningData?.active_playbooks ?? cockpit?.metrics.active_playbooks ?? 0), accent: 'text-violet-300' },
-  ], [cockpit, mediaData?.summary.health, mediaData?.summary.live_media, previews.length, signals.length, sources.length, t, tuningData?.active_playbooks])
+  ], [cockpit, mediaData?.summary.health, mediaData?.summary.live_media, mediaData?.summary.real_videos, previews.length, signals.length, sources.length, t, tuningData?.active_playbooks])
 
   async function runPreventiveDemo() {
     await simulate.mutateAsync(demoScenario)

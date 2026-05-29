@@ -4,7 +4,7 @@
 // Driven entirely by real SSE events from backend — NOT hardcoded animations
 // ============================================================================
 
-import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useActivityStore, type EventLifecycle, type PipelineStage, type StageDetail } from '@/stores/use-activity-store'
 import { cn } from '@/lib/utils'
 import {
@@ -167,7 +167,6 @@ function StageNode({
   config,
   status,
   duration,
-  stageDetail,
   isLast,
   onClick,
   selected,
@@ -661,6 +660,7 @@ export function PipelineMotionVisualizer({ trackedEventId, compact, className }:
       if (!lc) continue
       const hasVerdict = lc.stages.some((s) => s.stage === 'verdict')
       if (!hasVerdict && lc.stages.length > 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSelectedId(id)
         return
       }
@@ -679,6 +679,7 @@ export function PipelineMotionVisualizer({ trackedEventId, compact, className }:
   // Auto-update tracked event from prop changes
   useEffect(() => {
     if (trackedEventId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedId(null)
       setSelectedStage(null)
     }

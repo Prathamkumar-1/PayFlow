@@ -9,7 +9,7 @@ import { SeverityBadge, verdictToSeverity } from '@/components/shared/severity-b
 import { fmtPaisa, fmtTimestamp, truncId, cn } from '@/lib/utils'
 import { Bell, Inbox, Filter, Tag } from 'lucide-react'
 import { useState, useMemo } from 'react'
-import type { SSEAgentVerdict, AgentLogEntry } from '@/lib/types'
+import type { SSEAgentVerdict } from '@/lib/types'
 import { useT } from '@/lib/i18n'
 
 const TYPOLOGY_COLORS: Record<string, string> = {

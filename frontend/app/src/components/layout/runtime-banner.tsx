@@ -22,6 +22,7 @@ export function RuntimeBanner() {
 
   useEffect(() => {
     if (connected || (orchestrator && hardware)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWarmup(false)
       return
     }

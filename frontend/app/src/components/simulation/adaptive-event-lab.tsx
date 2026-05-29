@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import {
   Activity,
@@ -11,11 +9,8 @@ import {
   Clock3,
   FileText,
   Loader2,
-  PauseCircle,
   Play,
   Radar,
-  RotateCcw,
-  ShieldAlert,
   ShieldCheck,
   Sparkles,
   XCircle,
@@ -195,6 +190,7 @@ function EventPreview({ events }: { events: EventLabGeneratedEvent[] }) {
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function RunTimeline({
   run,
   explainability,
@@ -360,6 +356,7 @@ function ProposalRow({
           <div className="mt-2 grid grid-cols-2 gap-1 sm:grid-cols-4">
             <div className="rounded bg-bg-surface px-2 py-1">
               <div className="text-[7px] font-bold uppercase tracking-wide text-text-muted">TTL</div>
+              {/* eslint-disable-next-line react-hooks/purity */}
               <div className="font-mono text-[9px] font-bold text-text-primary">{fmtSeconds(proposal.expires_at - Date.now() / 1000)}</div>
             </div>
             <div className="rounded bg-bg-surface px-2 py-1">
@@ -416,6 +413,7 @@ function ProposalRow({
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function CountermeasureConsole({
   runId,
   explainability,

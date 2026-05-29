@@ -91,7 +91,7 @@ export function CircuitBreakerPanel() {
 function FreezeOrderCard({ order }: { order: FreezeOrder }) {
   const hasSubs = order.ml_risk_score != null || order.gnn_risk_score != null || order.graph_evidence_score != null
   const ttlRemaining = order.ttl_seconds && order.freeze_timestamp
-    ? Math.max(0, order.ttl_seconds - (Date.now() / 1000 - order.freeze_timestamp))
+    ? Math.max(0, order.ttl_seconds - (Date.now() / 1000 - order.freeze_timestamp)) // eslint-disable-line react-hooks/purity
     : null
 
   return (

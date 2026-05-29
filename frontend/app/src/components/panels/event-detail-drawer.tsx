@@ -9,8 +9,8 @@ import { PipelineStageBar } from '@/components/panels/pipeline-stage-bar'
 import { SeverityBadge, verdictToSeverity } from '@/components/shared/severity-badge'
 import { fmtPaisa, fmtTimestamp, truncId, cn } from '@/lib/utils'
 import { FRAUD_PATTERN_LABELS } from '@/lib/types'
-import { X, ArrowRight, Clock, Fingerprint, BarChart3, Brain, Wrench, Gavel, Network } from 'lucide-react'
-import type { EventLifecycle, StageDetail } from '@/stores/use-activity-store'
+import { X, Clock, Fingerprint, BarChart3, Brain, Wrench, Gavel, Network } from 'lucide-react'
+import type { StageDetail } from '@/stores/use-activity-store'
 import type { SSEAgentThinking, SSEAgentToolCall, SSEAgentVerdict } from '@/lib/types'
 
 const STAGE_LABELS: Record<string, string> = {

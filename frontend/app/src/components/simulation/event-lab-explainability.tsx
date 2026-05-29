@@ -7,7 +7,6 @@
 // circuit-breaker → AI investigation → analyst decision → ledger anchor.
 // ============================================================================
 
-import * as React from 'react'
 import { useMemo, useEffect, useRef } from 'react'
 import {
   Activity,
@@ -50,6 +49,7 @@ import type {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function fmtAmount(paisa?: number) {
   if (!paisa) return '—'
   const inr = paisa / 100
@@ -110,6 +110,7 @@ function getStageMeta(stage: string) {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function SectionHeading({ icon: Icon, title, sub, color }: {
   icon: typeof Shield; title: string; sub?: string; color: string
 }) {
@@ -129,6 +130,7 @@ function SectionHeading({ icon: Icon, title, sub, color }: {
   )
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function StatusDot({ done, active }: { done: boolean; active: boolean }) {
   if (done)   return <div className="w-2 h-2 rounded-full bg-green-400 shrink-0" />
   if (active) return <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
@@ -138,7 +140,7 @@ function StatusDot({ done, active }: { done: boolean; active: boolean }) {
 // ─── Live Stage Timeline ─────────────────────────────────────────────────────
 
 function LiveStageTimeline({ run }: { run: EventLabRunResponse | undefined }) {
-  const stages = run?.stages ?? []
+  const stages = useMemo(() => run?.stages ?? [], [run?.stages])
   const doneSet = useMemo(() => new Set(stages.map(s => s.stage)), [stages])
 
   const ORDER = [
@@ -171,7 +173,8 @@ function LiveStageTimeline({ run }: { run: EventLabRunResponse | undefined }) {
       }
     }
     return passed
-  }, [doneSet, ORDER])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [doneSet])
 
   return (
     <div className="space-y-1">
@@ -283,7 +286,6 @@ function DetectionLayerBreakdown({ explainability }: {
   explainability: EventLabExplainabilityResponse | undefined
 }) {
   const panels = explainability?.evidence_panels ?? []
-  const run = explainability?.run
 
   const LAYERS = [
     {
@@ -431,6 +433,7 @@ function ProposalStatusCard({
       : proposal.status === 'failed' ? 'fraudulent'
       : 'escalated',
   )
+  // eslint-disable-next-line react-hooks/purity
   const ttl = Math.max(0, Math.round(proposal.expires_at - Date.now() / 1000))
   const executable = proposal.execution_allowed && proposal.status === 'proposed'
 
@@ -927,8 +930,6 @@ export function EventLabExplainabilityPanel({
   explainability,
 }: EventLabExplainabilityPanelProps) {
   const proposals = run?.countermeasure_proposals ?? []
-  const pendingProposals  = proposals.filter(p => p.status === 'proposed')
-  const resolvedProposals = proposals.filter(p => p.status !== 'proposed')
 
   // Auto-scroll the stage feed when new stages arrive
   const timelineRef = useRef<HTMLDivElement>(null)

@@ -19,8 +19,9 @@ export function QuickStats() {
   const { data: snap } = useSnapshot()
 
   // Use SSE data when live; fall back to latest REST snapshot
-  const orch = sseOrchestrator ?? (snap as any)?.orchestrator ?? null
-  const hw   = sseHardware    ?? (snap as any)?.hardware      ?? null
+  const snapData = snap as Record<string, unknown> | undefined
+  const orch = sseOrchestrator ?? (snapData?.orchestrator as typeof sseOrchestrator) ?? null
+  const hw   = sseHardware    ?? (snapData?.hardware as typeof sseHardware) ?? null
 
   return (
     <div className="p-2.5">

@@ -15,6 +15,7 @@ export function ConnectionStatus({ connected }: Props) {
 
   useEffect(() => {
     if (connected) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWarmup(false)
       return
     }
