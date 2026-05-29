@@ -1,9 +1,11 @@
 """
 PayFlow — Round-Robin Cloud LLM API Key Pool
 =============================================
-Manages up to 30 Claude (Anthropic) and Groq API keys in a round-robin
-rotation with automatic failover, rate-limit detection, and health-based
-key skipping.
+Manages up to 30 Claude (Anthropic) and 30 Groq API keys in a round-robin
+rotation with automatic failover, escalating cooldowns, health monitoring,
+and a penalty/decay system for deprioritizing repeatedly failing keys.
+
+Inspired by the freellmapi (github.com/tashfeenahmed/freellmapi) router model.
 
 Usage::
 
@@ -25,13 +27,15 @@ Usage::
     print(response.key_index)   # which key was used
 
 Rules:
-  - Keys are tried in round-robin order per provider then across providers.
-  - On 429 (rate-limit): key is cooled down for COOLDOWN_SECONDS (default 60s),
-    then next key is tried immediately.
-  - On 5xx / timeout: key is marked degraded for DEGRADED_SECONDS (default 30s).
-  - On 4xx (bad key): key is permanently disabled for this session.
+  - Separate round-robin cursors per provider (claude / groq).
+  - Escalating cooldowns on 429: 2min → 10min → 1hr → 24hr per hit count.
+  - On 5xx / timeout: key is marked degraded for DEGRADED_SECONDS (30s).
+  - On 4xx bad key: key is permanently disabled for this session.
+  - Penalty/decay system: repeated failures add penalty; good calls decay it.
+  - Background health checker validates all healthy keys every 5 minutes,
+    auto-disabling keys that fail 3 consecutive health probes.
   - If ALL keys are exhausted, raises AllKeysExhaustedError.
-  - Thread-safe: uses asyncio.Lock for index advancement.
+  - Thread-safe: uses asyncio.Lock for index advancement per provider.
 """
 
 from __future__ import annotations
@@ -47,10 +51,24 @@ logger = logging.getLogger(__name__)
 
 # ── Tunable constants ────────────────────────────────────────────────────────
 
-COOLDOWN_SECONDS  = 60    # pause after 429
-DEGRADED_SECONDS  = 30    # pause after 5xx / timeout
-MAX_RETRIES       = 30    # max keys to try before giving up (= pool size)
-DEFAULT_MAX_TOKENS = 1024
+# Escalating cooldown durations (seconds) indexed by hit count (capped at last)
+# Mirrors freellmapi: 2min, 10min, 1hr, 24hr
+COOLDOWN_LADDER: list[float] = [
+    2 * 60,        # 1st rate-limit hit
+    10 * 60,       # 2nd
+    60 * 60,       # 3rd
+    24 * 60 * 60,  # 4th and beyond
+]
+
+DEGRADED_SECONDS       = 30      # pause after 5xx / timeout
+MAX_RETRIES            = 60      # max keys to try (covers full 30+30 pool)
+HEALTH_CHECK_INTERVAL  = 300     # seconds between background health probes (5 min)
+MAX_CONSECUTIVE_FAILS  = 3       # auto-disable after this many health failures
+PENALTY_PER_ERROR      = 3       # penalty points added per rate-limit hit
+MAX_PENALTY            = 10      # penalty cap
+PENALTY_DECAY_INTERVAL = 120     # seconds between automatic penalty decay ticks
+
+DEFAULT_MAX_TOKENS  = 1024
 DEFAULT_TEMPERATURE = 0.3
 
 
@@ -70,11 +88,31 @@ class APIKeyEntry:
     key: str
     # Runtime health state
     disabled: bool = False           # permanent 4xx → disabled for session
-    cooldown_until: float = 0.0      # time.monotonic() until which key is on cooldown
-    degraded_until: float = 0.0      # time.monotonic() until which key is degraded
+    cooldown_until: float = 0.0      # monotonic time until cooldown expires
+    degraded_until: float = 0.0      # monotonic time until degraded state expires
+    cooldown_hits: int = 0           # how many times this key was rate-limited
+    consecutive_health_fails: int = 0
+    # Usage counters
     total_calls: int = 0
     total_errors: int = 0
     total_cooldowns: int = 0
+    # Penalty/decay for soft deprioritization
+    penalty: float = 0.0
+    _last_penalty_decay: float = field(default_factory=time.monotonic)
+
+    def _decay_penalty(self) -> None:
+        """Linearly decay penalty over time (called on each availability check)."""
+        now = time.monotonic()
+        elapsed = now - self._last_penalty_decay
+        ticks = int(elapsed / PENALTY_DECAY_INTERVAL)
+        if ticks > 0:
+            self.penalty = max(0.0, self.penalty - ticks)
+            self._last_penalty_decay = now
+
+    @property
+    def effective_penalty(self) -> float:
+        self._decay_penalty()
+        return self.penalty
 
     @property
     def is_available(self) -> bool:
@@ -93,18 +131,45 @@ class APIKeyEntry:
             return "disabled"
         now = time.monotonic()
         if now < self.cooldown_until:
-            remaining = round(self.cooldown_until - now)
-            return f"cooldown:{remaining}s"
+            return f"cooldown:{round(self.cooldown_until - now)}s"
         if now < self.degraded_until:
-            remaining = round(self.degraded_until - now)
-            return f"degraded:{remaining}s"
+            return f"degraded:{round(self.degraded_until - now)}s"
+        if self.penalty > 0:
+            return f"ok(penalty:{self.penalty:.0f})"
         return "ok"
 
+    def apply_rate_limit(self) -> None:
+        """Apply escalating cooldown based on how many times this key has been hit."""
+        self.cooldown_hits += 1
+        self.total_cooldowns += 1
+        ladder_idx = min(self.cooldown_hits - 1, len(COOLDOWN_LADDER) - 1)
+        duration = COOLDOWN_LADDER[ladder_idx]
+        self.cooldown_until = time.monotonic() + duration
+        # Accumulate penalty for load-based deprioritization
+        self.penalty = min(self.penalty + PENALTY_PER_ERROR, MAX_PENALTY)
+        logger.warning(
+            "RoundRobin: key[%s…] %s rate-limited (hit #%d) → cooldown %.0fs",
+            self.key[-6:], self.provider, self.cooldown_hits, duration,
+        )
+
+    def apply_degraded(self) -> None:
+        self.degraded_until = time.monotonic() + DEGRADED_SECONDS
+
+    def record_success(self) -> None:
+        """Decay penalty on a successful call."""
+        if self.penalty > 0:
+            self.penalty = max(0.0, self.penalty - 1)
+        # Reset consecutive health fails on any live success
+        self.consecutive_health_fails = 0
+
     def snapshot(self) -> dict:
+        self._decay_penalty()
         return {
             "provider": self.provider,
             "key_suffix": self.key[-6:] if len(self.key) >= 6 else "***",
             "status": self.status,
+            "penalty": round(self.penalty, 1),
+            "cooldown_hits": self.cooldown_hits,
             "total_calls": self.total_calls,
             "total_errors": self.total_errors,
             "total_cooldowns": self.total_cooldowns,
@@ -128,17 +193,26 @@ class RoundRobinLLMPool:
     """
     Thread-safe round-robin pool of Claude + Groq API keys.
 
-    The pool advances a cursor across all keys. Each call picks the next
-    available (non-cooled-down, non-degraded, non-disabled) key. On failure the
-    cursor advances and the next key is tried, up to MAX_RETRIES attempts.
+    - Separate cursor per provider so Claude and Groq keys each cycle
+      independently (matching freellmapi per-platform index tracking).
+    - Escalating cooldowns: 2min → 10min → 1hr → 24hr per key hit count.
+    - Penalty/decay: repeatedly failing keys are soft-deprioritized.
+    - Background health checker: probes all non-disabled keys every 5 minutes
+      and auto-disables any key that fails 3 consecutive health checks.
     """
 
     def __init__(self, keys: list[APIKeyEntry]) -> None:
         if not keys:
             raise ValueError("RoundRobinLLMPool requires at least one API key.")
         self._keys: list[APIKeyEntry] = keys
-        self._cursor: int = 0
-        self._lock = asyncio.Lock()
+        # Per-provider cursors (freellmapi-style per-platform index)
+        self._cursors: dict[Provider, int] = {"claude": 0, "groq": 0}
+        self._locks: dict[Provider, asyncio.Lock] = {
+            "claude": asyncio.Lock(),
+            "groq": asyncio.Lock(),
+        }
+        self._global_lock = asyncio.Lock()
+        self._health_task: asyncio.Task | None = None
         logger.info(
             "RoundRobinLLMPool initialized: %d keys (%d claude, %d groq)",
             len(keys),
@@ -167,20 +241,20 @@ class RoundRobinLLMPool:
         """
         keys: list[APIKeyEntry] = []
 
-        # Claude keys
+        # Claude keys (numbered variants first)
         for i in range(1, max_claude + 1):
             for var in (f"CLAUDE_KEY_{i}", f"ANTHROPIC_API_KEY_{i}"):
                 val = os.getenv(var, "").strip()
                 if val:
                     keys.append(APIKeyEntry(provider="claude", key=val))
                     break
-        # Also accept single-key env vars (common dev setup)
+        # Single-key fallbacks (common dev setup)
         for var in ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"):
             val = os.getenv(var, "").strip()
             if val and not any(k.key == val for k in keys):
                 keys.append(APIKeyEntry(provider="claude", key=val))
 
-        # Groq keys
+        # Groq keys (numbered variants first)
         for i in range(1, max_groq + 1):
             for var in (f"GROQ_KEY_{i}", f"GROQ_API_KEY_{i}"):
                 val = os.getenv(var, "").strip()
@@ -197,28 +271,123 @@ class RoundRobinLLMPool:
                 "RoundRobinLLMPool.from_env(): no API keys found in environment. "
                 "Set CLAUDE_KEY_1…30 or GROQ_KEY_1…30."
             )
-            # Return an empty-but-valid pool that will always raise on use
             return cls([APIKeyEntry(provider="groq", key="__placeholder__", disabled=True)])
 
-        return cls(keys)
+        pool = cls(keys)
+        return pool
 
-    # ── Key selection ─────────────────────────────────────────────────────────
+    # ── Background health checker ─────────────────────────────────────────────
 
-    async def _next_available_index(self) -> int | None:
-        """Advance cursor to the next available key. Returns None if all exhausted."""
-        async with self._lock:
-            start = self._cursor
-            size = len(self._keys)
-            for _ in range(size):
-                idx = self._cursor % size
-                self._cursor = (self._cursor + 1) % size
-                if self._keys[idx].is_available:
-                    return idx
-                # Check if a cooled-down key is past its cooldown
-                if not self._keys[idx].disabled:
-                    # Already handled by is_available; just skip
-                    pass
-            return None  # All keys exhausted / cooled
+    def start_health_checker(self) -> None:
+        """
+        Launch a background asyncio task that probes all non-disabled keys
+        every HEALTH_CHECK_INTERVAL seconds and auto-disables keys that fail
+        MAX_CONSECUTIVE_FAILS consecutive checks (mirrors freellmapi health.ts).
+        """
+        if self._health_task is not None and not self._health_task.done():
+            return
+        self._health_task = asyncio.create_task(self._health_loop(), name="llm-pool-health")
+        logger.info("RoundRobinLLMPool: health checker started (interval=%ds)", HEALTH_CHECK_INTERVAL)
+
+    def stop_health_checker(self) -> None:
+        if self._health_task and not self._health_task.done():
+            self._health_task.cancel()
+            self._health_task = None
+
+    async def _health_loop(self) -> None:
+        while True:
+            await asyncio.sleep(HEALTH_CHECK_INTERVAL)
+            await self._check_all_keys()
+
+    async def _check_all_keys(self) -> None:
+        """Probe each non-disabled key with a minimal request."""
+        for idx, entry in enumerate(self._keys):
+            if entry.disabled:
+                continue
+            healthy = await self._probe_key(entry)
+            if healthy:
+                entry.consecutive_health_fails = 0
+                logger.debug("Health: key[%d] %s OK", idx, entry.provider)
+            else:
+                entry.consecutive_health_fails += 1
+                logger.warning(
+                    "Health: key[%d] %s fail #%d",
+                    idx, entry.provider, entry.consecutive_health_fails,
+                )
+                if entry.consecutive_health_fails >= MAX_CONSECUTIVE_FAILS:
+                    entry.disabled = True
+                    logger.error(
+                        "Health: key[%d] %s auto-disabled after %d consecutive failures",
+                        idx, entry.provider, MAX_CONSECUTIVE_FAILS,
+                    )
+
+    async def _probe_key(self, entry: APIKeyEntry) -> bool:
+        """
+        Send a minimal API request to verify the key is still valid.
+        Returns True if the key is healthy, False on any auth/server error.
+        Rate-limit responses (429) are treated as healthy — key is valid.
+        """
+        try:
+            if entry.provider == "claude":
+                await self._call_claude(
+                    entry=entry,
+                    messages=[{"role": "user", "content": "ping"}],
+                    system=None,
+                    max_tokens=1,
+                    temperature=0.0,
+                    model="claude-3-5-haiku-20241022",
+                )
+            else:
+                await self._call_groq(
+                    entry=entry,
+                    messages=[{"role": "user", "content": "ping"}],
+                    system=None,
+                    max_tokens=1,
+                    temperature=0.0,
+                    model="llama-3.1-8b-instant",
+                )
+            return True
+        except _RateLimitError:
+            # 429 means the key is valid — just rate-limited
+            return True
+        except _AuthError:
+            return False
+        except Exception:
+            return False
+
+    # ── Key selection (per-provider cursor) ───────────────────────────────────
+
+    async def _next_available_index(self, provider: Provider) -> int | None:
+        """
+        Advance the per-provider cursor to the next available key.
+        Keys with lower effective_penalty are preferred when multiple are available.
+        Returns the global index into self._keys, or None if all exhausted.
+        """
+        provider_keys = [(i, k) for i, k in enumerate(self._keys) if k.provider == provider]
+        if not provider_keys:
+            return None
+
+        async with self._locks[provider]:
+            size = len(provider_keys)
+            cursor = self._cursors[provider]
+
+            # First pass: find available keys sorted by penalty (lowest first)
+            available = [
+                (i, k) for i, k in provider_keys if k.is_available
+            ]
+            if not available:
+                return None
+
+            # Sort by penalty then by cursor order for fairness
+            available.sort(key=lambda x: (x[1].effective_penalty, (provider_keys.index(x) - cursor) % size))
+
+            # Advance cursor to the chosen key's position in the provider list
+            chosen_global_idx = available[0][0]
+            chosen_local_idx = next(
+                j for j, (gi, _) in enumerate(provider_keys) if gi == chosen_global_idx
+            )
+            self._cursors[provider] = (chosen_local_idx + 1) % size
+            return chosen_global_idx
 
     # ── Inference ─────────────────────────────────────────────────────────────
 
@@ -232,15 +401,19 @@ class RoundRobinLLMPool:
         model_groq: str = "llama-3.1-8b-instant",
     ) -> LLMCloudResponse:
         """
-        Run inference through the pool. Tries up to MAX_RETRIES keys.
+        Run inference through the pool. Tries up to MAX_RETRIES keys across
+        both providers, using per-provider round-robin cursors.
+
+        Provider preference order: claude first, then groq as fallback.
+        Within each provider, keys with lower penalty are tried first.
 
         Args:
             messages:     OpenAI-style message list [{"role":..., "content":...}]
-            system:       Optional system prompt (inserted for Claude automatically)
+            system:       Optional system prompt
             max_tokens:   Maximum completion tokens
             temperature:  Sampling temperature
-            model_claude: Claude model ID to use
-            model_groq:   Groq model ID to use
+            model_claude: Claude model ID
+            model_groq:   Groq model ID
 
         Returns:
             LLMCloudResponse with .content and metadata
@@ -249,19 +422,33 @@ class RoundRobinLLMPool:
             AllKeysExhaustedError if every key fails.
         """
         last_error: Exception | None = None
+        # Track which individual keys we've already tried this call
+        tried: set[int] = set()
 
         for attempt in range(MAX_RETRIES):
-            idx = await self._next_available_index()
+            # Try Claude keys first, then Groq
+            idx: int | None = None
+            for provider in ("claude", "groq"):
+                candidate = await self._next_available_index(provider)  # type: ignore[arg-type]
+                if candidate is not None and candidate not in tried:
+                    idx = candidate
+                    break
+
             if idx is None:
-                # All keys are currently on cooldown — wait briefly and retry
+                # All available keys tried — brief wait and one more attempt
                 await asyncio.sleep(2.0)
-                idx = await self._next_available_index()
+                for provider in ("claude", "groq"):
+                    candidate = await self._next_available_index(provider)  # type: ignore[arg-type]
+                    if candidate is not None and candidate not in tried:
+                        idx = candidate
+                        break
                 if idx is None:
                     raise AllKeysExhaustedError(
                         f"All {len(self._keys)} API keys exhausted after {attempt} attempts. "
                         f"Last error: {last_error}"
                     )
 
+            tried.add(idx)
             entry = self._keys[idx]
             entry.total_calls += 1
             t0 = time.monotonic()
@@ -289,26 +476,19 @@ class RoundRobinLLMPool:
                 latency_ms = (time.monotonic() - t0) * 1000
                 response.latency_ms = latency_ms
                 response.key_index = idx
+                entry.record_success()
 
                 logger.debug(
                     "RoundRobin: key[%d] %s/%s → OK (%.0fms, %d tokens)",
-                    idx,
-                    entry.provider,
-                    entry.key[-4:],
-                    latency_ms,
-                    response.completion_tokens,
+                    idx, entry.provider, entry.key[-4:],
+                    latency_ms, response.completion_tokens,
                 )
                 return response
 
             except _RateLimitError as exc:
                 entry.total_errors += 1
-                entry.total_cooldowns += 1
-                entry.cooldown_until = time.monotonic() + COOLDOWN_SECONDS
+                entry.apply_rate_limit()   # escalating cooldown + penalty
                 last_error = exc
-                logger.warning(
-                    "RoundRobin: key[%d] %s rate-limited → cooldown %ds",
-                    idx, entry.provider, COOLDOWN_SECONDS,
-                )
                 continue
 
             except _AuthError as exc:
@@ -323,7 +503,7 @@ class RoundRobinLLMPool:
 
             except _ServerError as exc:
                 entry.total_errors += 1
-                entry.degraded_until = time.monotonic() + DEGRADED_SECONDS
+                entry.apply_degraded()
                 last_error = exc
                 logger.warning(
                     "RoundRobin: key[%d] %s server error → degraded %ds: %s",
@@ -333,7 +513,7 @@ class RoundRobinLLMPool:
 
             except Exception as exc:
                 entry.total_errors += 1
-                entry.degraded_until = time.monotonic() + DEGRADED_SECONDS
+                entry.apply_degraded()
                 last_error = exc
                 logger.warning(
                     "RoundRobin: key[%d] %s unexpected error → degraded %ds: %s",
@@ -420,7 +600,6 @@ class RoundRobinLLMPool:
 
         client = AsyncGroq(api_key=entry.key)
 
-        # Groq uses OpenAI-compatible messages including system
         full_messages = list(messages)
         if system and not any(m.get("role") == "system" for m in full_messages):
             full_messages = [{"role": "system", "content": system}] + full_messages
@@ -452,7 +631,6 @@ class RoundRobinLLMPool:
         except GroqAuthError as exc:
             raise _AuthError(str(exc)) from exc
         except Exception as exc:
-            # Catch Groq's InternalServerError by message pattern
             msg = str(exc).lower()
             if "500" in msg or "internal" in msg or "server" in msg:
                 raise _ServerError(str(exc)) from exc
@@ -481,10 +659,20 @@ class RoundRobinLLMPool:
     def snapshot(self) -> dict:
         """Runtime health of every key in the pool."""
         available = sum(1 for k in self._keys if k.is_available)
+        claude_keys = [k for k in self._keys if k.provider == "claude"]
+        groq_keys   = [k for k in self._keys if k.provider == "groq"]
         return {
             "total_keys": len(self._keys),
             "available_keys": available,
-            "cursor": self._cursor,
+            "cursors": dict(self._cursors),
+            "claude": {
+                "total": len(claude_keys),
+                "available": sum(1 for k in claude_keys if k.is_available),
+            },
+            "groq": {
+                "total": len(groq_keys),
+                "available": sum(1 for k in groq_keys if k.is_available),
+            },
             "keys": [
                 {"index": i, **k.snapshot()}
                 for i, k in enumerate(self._keys)
@@ -537,7 +725,7 @@ def configure_llm_pool(keys: list[APIKeyEntry]) -> RoundRobinLLMPool:
         pool = configure_llm_pool([
             APIKeyEntry(provider="claude", key="sk-ant-..."),
             APIKeyEntry(provider="groq",   key="gsk_..."),
-            # ... up to 30 total
+            # ... up to 30 of each
         ])
     """
     global _pool
