@@ -566,10 +566,18 @@ function AIReasoningPanel({ run, explainability }: {
   const indicators = run?.expected_indicators ?? []
 
   // Extract Groq pool metadata from qwen_context_loaded stage
-  const groqMeta = useMemo(() => {
+  interface GroqMeta {
+    provider?: string
+    model?: string
+    key_index?: number | string
+    latency_ms?: number
+    tokens?: number
+    pool_available?: number
+  }
+  const groqMeta = useMemo((): GroqMeta | null => {
     const stages = run?.stages ?? explainability?.run?.stages ?? []
     const loaded = stages.find((s: { stage: string }) => s.stage === 'qwen_context_loaded')
-    return loaded?.meta ?? null
+    return (loaded?.meta as GroqMeta) ?? null
   }, [run?.stages, explainability?.run?.stages])
 
   const isGroqLive  = groqMeta?.provider === 'groq' || groqMeta?.provider === 'claude'
